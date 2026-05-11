@@ -511,7 +511,6 @@ func _do_reveal() -> void:
 		"totalEmojis": emoji_processing_order.size(),
 	})
 	reveal_ready.emit(target_emoji, target_name, reveal_phrases)
-	_reveal_timer.start(REVEAL_DURATION)
 
 	# Calculate scores silently — don't show until the end
 	var score_deltas := _calculate_emoji_scores(target_id, all_options)

@@ -59,6 +59,12 @@ func _on_reveal_ready(emoji: String, author_name: String, phrases: Array) -> voi
 	_load_scene("reveal")
 	if current_scene and current_scene.has_method("setup"):
 		current_scene.setup(emoji, author_name, phrases, game.players)
+	if current_scene and current_scene.has_signal("sequence_done"):
+		current_scene.sequence_done.connect(_on_reveal_sequence_done, CONNECT_ONE_SHOT)
+
+
+func _on_reveal_sequence_done() -> void:
+	game.advance_phase()
 
 
 func _on_score_ready(player_scores: Array, is_last: bool) -> void:
