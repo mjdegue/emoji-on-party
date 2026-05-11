@@ -259,12 +259,12 @@ func _dismiss_active_card(phrase: Dictionary) -> void:
 
 
 func _shake(node: Control) -> void:
-	var original_x := node.position.x
+	node.pivot_offset = node.size / 2.0
 	var tween := node.create_tween()
-	for i in range(10):
-		var offset := 12.0 if i % 2 == 0 else -12.0
-		tween.tween_property(node, "position:x", original_x + offset, 0.035)
-	tween.tween_property(node, "position:x", original_x, 0.035)
+	for i in range(12):
+		var angle := 3.0 if i % 2 == 0 else -3.0
+		tween.tween_property(node, "rotation_degrees", angle, 0.04)
+	tween.tween_property(node, "rotation_degrees", 0.0, 0.04)
 	await tween.finished
 
 
