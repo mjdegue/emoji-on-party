@@ -28,7 +28,7 @@ func _ready() -> void:
 	UI.style_label(progress_label, UI.FONT_SUBHEADING, UI.TEXT_COLOR)
 	_update_labels()
 	UI.fade_in(self)
-	UI.pulse(title_label)
+	UI.shimmer(title_label)
 
 
 func _update_labels() -> void:

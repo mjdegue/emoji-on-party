@@ -82,7 +82,9 @@ static func slide_in_from_bottom(node: Control, duration: float = 0.5, delay: fl
 	tween.tween_property(node, "modulate:a", 1.0, duration * 0.6).set_ease(Tween.EASE_OUT)
 
 
-static func pulse(node: Control, scale: float = 1.08, duration: float = 0.8) -> void:
-	var tween := node.create_tween().set_loops()
-	tween.tween_property(node, "scale", Vector2(scale, scale), duration / 2.0).set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_SINE)
-	tween.tween_property(node, "scale", Vector2.ONE, duration / 2.0).set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_SINE)
+static func shimmer(label: Label, base: Color = PRIMARY, highlight: Color = Color.WHITE) -> void:
+	var mat := ShaderMaterial.new()
+	mat.shader = load("res://shaders/shimmer.gdshader")
+	mat.set_shader_parameter("base_color", base)
+	mat.set_shader_parameter("shimmer_color", highlight)
+	label.material = mat
