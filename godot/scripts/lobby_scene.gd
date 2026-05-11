@@ -60,7 +60,7 @@ func _update_ui() -> void:
 	if game == null:
 		return
 
-	var player_count := game.get_player_count()
+	var player_count: int = game.get_player_count()
 
 	for pid in game.players:
 		var p: Dictionary = game.players[pid]
