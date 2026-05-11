@@ -13,6 +13,24 @@ const GOLD := Color(1.0, 0.84, 0.0)
 const SILVER := Color(0.75, 0.75, 0.75)
 const BRONZE := Color(0.8, 0.5, 0.2)
 
+const PLAYER_COLORS: Array[Color] = [
+	Color(0.36, 0.78, 0.98),  # Sky blue
+	Color(1.0, 0.47, 0.42),   # Coral
+	Color(0.56, 0.93, 0.56),  # Light green
+	Color(1.0, 0.76, 0.28),   # Amber
+	Color(0.87, 0.56, 0.97),  # Lavender
+	Color(1.0, 0.62, 0.76),   # Pink
+]
+
+const PLAYER_COLOR_HEX: Array[String] = [
+	"#5cc7fa",
+	"#ff786b",
+	"#8fed8f",
+	"#ffc247",
+	"#de8ff8",
+	"#ff9ec2",
+]
+
 const FONT_TITLE := 64
 const FONT_HEADING := 40
 const FONT_SUBHEADING := 28

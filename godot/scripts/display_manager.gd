@@ -58,7 +58,7 @@ func _on_decoy_round_started(target_name: String, emoji: String, index: int, tot
 func _on_reveal_ready(emoji: String, author_name: String, phrases: Array) -> void:
 	_load_scene("reveal")
 	if current_scene and current_scene.has_method("setup"):
-		current_scene.setup(emoji, author_name, phrases)
+		current_scene.setup(emoji, author_name, phrases, game.players)
 
 
 func _on_score_ready(player_scores: Array, is_last: bool) -> void:

@@ -315,6 +315,13 @@ input[type="text"]::placeholder {
   opacity: 0.4;
 }
 
+.player-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
 .player-name {
   flex: 1;
   font-weight: 600;

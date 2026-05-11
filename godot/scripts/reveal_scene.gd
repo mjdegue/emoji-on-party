@@ -9,11 +9,14 @@ extends Control
 
 var _countdown := 15.0
 var _counting := false
+var _players_ref := {}
 
 
-func setup(emoji: String, author_name: String, phrases: Array) -> void:
+func setup(emoji: String, author_name: String, phrases: Array, players_data: Dictionary = {}) -> void:
 	if not is_inside_tree():
 		return
+
+	_players_ref = players_data
 
 	background.color = Theme.BG_COLOR
 	Theme.style_label(header_label, Theme.FONT_HEADING, Theme.PRIMARY)
@@ -55,8 +58,10 @@ func setup(emoji: String, author_name: String, phrases: Array) -> void:
 			badge.text = "REAL"
 			hbox.add_child(badge)
 		else:
+			var author_id: String = p.get("user", "")
+			var author_color := _get_player_color(author_id)
 			var author := Label.new()
-			Theme.style_label(author, Theme.FONT_SMALL, Theme.TEXT_MUTED)
+			Theme.style_label(author, Theme.FONT_SMALL, author_color)
 			author.text = p["userName"]
 			hbox.add_child(author)
 
@@ -77,6 +82,15 @@ func setup(emoji: String, author_name: String, phrases: Array) -> void:
 	_counting = true
 	_update_countdown()
 	Theme.fade_in(self, 0.3)
+
+
+func _get_player_color(player_id: String) -> Color:
+	if _players_ref.has(player_id):
+		var p: Dictionary = _players_ref[player_id]
+		var ci: int = p.get("color_index", 0)
+		if ci >= 0 and ci < Theme.PLAYER_COLORS.size():
+			return Theme.PLAYER_COLORS[ci]
+	return Theme.TEXT_MUTED
 
 
 func _process(delta: float) -> void:

@@ -9,7 +9,7 @@ interface Props {
 export function LobbyScreen({ sessionCode, players, playerName }: Props) {
   return (
     <div className="screen lobby-screen">
-      <h1>Lobby</h1>
+      <h1>Emoji-On</h1>
       <p className="session-code">Code: <strong>{sessionCode}</strong></p>
       <p className="subtitle">Waiting for host to start...</p>
 
@@ -20,7 +20,13 @@ export function LobbyScreen({ sessionCode, players, playerName }: Props) {
             key={p.id}
             className={`player-item ${!p.isConnected ? "disconnected" : ""}`}
           >
-            <span className="player-name">
+            {p.color && (
+              <span
+                className="player-dot"
+                style={{ backgroundColor: p.color }}
+              />
+            )}
+            <span className="player-name" style={p.color ? { color: p.color } : undefined}>
               {p.name}
               {p.name === playerName && " (you)"}
             </span>

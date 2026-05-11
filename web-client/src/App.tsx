@@ -88,7 +88,7 @@ export default function App() {
           break;
         case "join_confirmed": {
           const p = payload as unknown as JoinConfirmedPayload;
-          s.setPlayerInfo(p.playerId, s.playerName, p.sessionState.sessionCode);
+          s.setPlayerInfo(p.playerId, s.playerName, p.sessionState.sessionCode, p.color);
           s.setPlayers(p.sessionState.players);
           s.setPhase("lobby");
           saveSession(p.playerId, s.playerName, p.sessionState.sessionCode);
@@ -136,6 +136,7 @@ export default function App() {
             name: p.playerName,
             isCreator: false,
             isConnected: true,
+            color: p.color,
           });
           break;
         }

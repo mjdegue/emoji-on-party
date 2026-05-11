@@ -87,12 +87,14 @@ func _on_player_joined(player_id: String, player_name: String) -> void:
 		return
 
 	var is_first := players.is_empty()
+	var color_index: int = players.size() % Theme.PLAYER_COLORS.size()
 	var player := {
 		"id": player_id,
 		"name": player_name,
 		"is_connected": true,
 		"is_creator": is_first,
 		"joined_at": Time.get_ticks_msec(),
+		"color_index": color_index,
 	}
 	if is_first:
 		creator_id = player_id
@@ -103,12 +105,16 @@ func _on_player_joined(player_id: String, player_name: String) -> void:
 
 	network.send_to_player(player_id, "join_confirmed", {
 		"playerId": player_id,
+		"colorIndex": color_index,
+		"color": Theme.PLAYER_COLOR_HEX[color_index],
 		"sessionState": _get_lobby_state(),
 	})
 
 	network.send_to_all("player_joined", {
 		"playerId": player_id,
 		"playerName": player_name,
+		"colorIndex": color_index,
+		"color": Theme.PLAYER_COLOR_HEX[color_index],
 	})
 
 
@@ -753,6 +759,8 @@ func _get_lobby_state() -> Dictionary:
 			"name": p["name"],
 			"isCreator": p["is_creator"],
 			"isConnected": p["is_connected"],
+			"colorIndex": p["color_index"],
+			"color": Theme.PLAYER_COLOR_HEX[p["color_index"]],
 		})
 	return {
 		"phase": phase,

@@ -94,17 +94,30 @@ func _update_ui() -> void:
 	for pid in game.players:
 		var p: Dictionary = game.players[pid]
 
+		var color_idx: int = p.get("color_index", idx % Theme.PLAYER_COLORS.size())
+		var player_color: Color = Theme.PLAYER_COLORS[color_idx]
+
 		var panel := Theme.make_panel(player_list, Theme.SURFACE_COLOR)
 		var hbox := HBoxContainer.new()
 		hbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		panel.add_child(hbox)
+
+		# Color dot
+		var dot := ColorRect.new()
+		dot.custom_minimum_size = Vector2(14, 14)
+		dot.color = player_color
+		hbox.add_child(dot)
+
+		var spacer := Control.new()
+		spacer.custom_minimum_size = Vector2(12, 0)
+		hbox.add_child(spacer)
 
 		var name_label := Label.new()
 		name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		var display_name: String = p["name"]
 		if p["is_creator"]:
 			display_name += "  [HOST]"
-		Theme.style_label(name_label, Theme.FONT_BODY, Theme.TEXT_COLOR)
+		Theme.style_label(name_label, Theme.FONT_BODY, player_color)
 		name_label.text = display_name
 		hbox.add_child(name_label)
 

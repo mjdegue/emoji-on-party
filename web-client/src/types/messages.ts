@@ -11,6 +11,8 @@ export interface RelayMessage {
 
 export interface JoinConfirmedPayload {
   playerId: string;
+  colorIndex: number;
+  color: string;
   sessionState: {
     phase: string;
     players: PlayerInfo[];
@@ -22,6 +24,7 @@ export interface PlayerInfo {
   id: string;
   name: string;
   isCreator: boolean;
+  color?: string;
   isConnected: boolean;
 }
 
@@ -126,6 +129,7 @@ export interface GameEndedPayload {
 export interface PlayerJoinedPayload {
   playerId: string;
   playerName: string;
+  color?: string;
 }
 
 export interface PlayerDisconnectedPayload {

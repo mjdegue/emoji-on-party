@@ -28,6 +28,7 @@ export interface GameState {
   playerId: string;
   playerName: string;
   sessionCode: string;
+  myColor: string;
 
   // Game
   phase: GamePhase;
@@ -72,7 +73,7 @@ export interface GameState {
 
 export interface GameActions {
   setConnected: (connected: boolean) => void;
-  setPlayerInfo: (playerId: string, playerName: string, sessionCode: string) => void;
+  setPlayerInfo: (playerId: string, playerName: string, sessionCode: string, color?: string) => void;
   setPhase: (phase: GamePhase) => void;
   setPlayers: (players: PlayerInfo[]) => void;
   addPlayer: (player: PlayerInfo) => void;
@@ -103,6 +104,7 @@ const initialState: GameState = {
   playerId: "",
   playerName: "",
   sessionCode: "",
+  myColor: "",
   phase: "disconnected",
   players: [],
   myPhrase: null,
@@ -133,8 +135,8 @@ export const useGameStore = create<GameState & GameActions>()((set) => ({
   setConnected: (connected) =>
     set({ connected, phase: connected ? "join" : "disconnected", error: "" }),
 
-  setPlayerInfo: (playerId, playerName, sessionCode) =>
-    set({ playerId, playerName, sessionCode }),
+  setPlayerInfo: (playerId, playerName, sessionCode, color) =>
+    set({ playerId, playerName, sessionCode, myColor: color || "" }),
 
   setPhase: (phase) =>
     set({
