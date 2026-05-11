@@ -1,0 +1,356 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --bg: #1a1825;
+  --surface: #252336;
+  --surface-hover: #2f2d45;
+  --primary: #7c5cfc;
+  --primary-hover: #6a4ae0;
+  --text: #e8e6f0;
+  --text-muted: #9994b8;
+  --error: #ff5757;
+  --success: #4caf50;
+  --border: #3a3750;
+  --radius: 12px;
+}
+
+html, body {
+  height: 100%;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+}
+
+#root {
+  min-height: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+/* --- Screens --- */
+
+.screen {
+  width: 100%;
+  max-width: 420px;
+  padding: 24px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+h1 {
+  font-size: 2rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+h2 {
+  font-size: 1.4rem;
+  font-weight: 700;
+}
+
+.subtitle {
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.error {
+  color: var(--error);
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.hint {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  text-align: center;
+}
+
+/* --- Forms --- */
+
+form {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+input[type="text"] {
+  width: 100%;
+  padding: 14px 16px;
+  background: var(--surface);
+  border: 2px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  font-size: 1rem;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+input[type="text"]:focus {
+  border-color: var(--primary);
+}
+
+.input-code {
+  text-align: center;
+  font-size: 1.5rem;
+  letter-spacing: 0.3em;
+  font-weight: 700;
+}
+
+.input-emoji {
+  font-size: 1.5rem;
+  text-align: center;
+}
+
+/* --- Buttons --- */
+
+.btn-primary {
+  width: 100%;
+  padding: 14px;
+  background: var(--primary);
+  color: white;
+  border: none;
+  border-radius: var(--radius);
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, opacity 0.2s;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: var(--primary-hover);
+}
+
+.btn-primary:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* --- Phrase Card --- */
+
+.phrase-card {
+  width: 100%;
+  background: var(--surface);
+  border: 2px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.phrase-category {
+  font-size: 0.8rem;
+  color: var(--primary);
+  text-transform: uppercase;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+}
+
+.phrase-text {
+  font-size: 1.3rem;
+  font-weight: 700;
+}
+
+.phrase-difficulty {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  text-transform: capitalize;
+}
+
+/* --- Emoji Display --- */
+
+.emoji-display {
+  font-size: 3rem;
+  text-align: center;
+  padding: 16px;
+  line-height: 1.3;
+  word-break: break-all;
+}
+
+/* --- Progress --- */
+
+.progress-badge {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 4px 14px;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 8px;
+  background: var(--surface);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: var(--primary);
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+.progress-text {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  text-align: center;
+}
+
+/* --- Player List --- */
+
+.player-list {
+  width: 100%;
+}
+
+.player-list h2 {
+  font-size: 1rem;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+
+.player-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  background: var(--surface);
+  border-radius: 8px;
+  margin-bottom: 6px;
+}
+
+.player-item.disconnected {
+  opacity: 0.5;
+}
+
+.player-name {
+  flex: 1;
+  font-weight: 500;
+}
+
+.badge {
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: var(--primary);
+  color: white;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.badge.offline {
+  background: var(--error);
+}
+
+.session-code strong {
+  font-size: 1.4rem;
+  letter-spacing: 0.15em;
+  color: var(--primary);
+}
+
+/* --- Guessing Options --- */
+
+.options-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+.option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  background: var(--surface);
+  border: 2px solid var(--border);
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.option:hover {
+  background: var(--surface-hover);
+}
+
+.option.selected {
+  border-color: var(--primary);
+  background: var(--surface-hover);
+}
+
+.option input[type="radio"] {
+  accent-color: var(--primary);
+  width: 18px;
+  height: 18px;
+}
+
+.option span {
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+/* --- Rankings --- */
+
+.rankings {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ranking-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  background: var(--surface);
+  border: 2px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.ranking-item.is-me {
+  border-color: var(--primary);
+}
+
+.position {
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: var(--primary);
+  min-width: 36px;
+}
+
+.ranking-name {
+  flex: 1;
+  font-weight: 600;
+}
+
+.score {
+  font-weight: 700;
+  color: var(--primary);
+}
+
+/* --- Watching Screen --- */
+
+.watching-screen {
+  justify-content: center;
+  min-height: 60vh;
+}
+
+.watching-screen h2 {
+  font-size: 1.8rem;
+}
