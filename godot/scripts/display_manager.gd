@@ -3,7 +3,6 @@ extends Node
 var game: Node
 var network: Node
 
-# Scene references (will be loaded dynamically)
 var current_scene: Control = null
 var scene_container: Control = null
 
@@ -12,30 +11,31 @@ const SCENES := {
 }
 
 
-func initialize(game_ref: Node, network_ref: Node) -> void:
+func initialize(game_ref: Node, network_ref: Node, container: Control) -> void:
 	game = game_ref
 	network = network_ref
+	scene_container = container
 	game.phase_changed.connect(_on_phase_changed)
+	_load_scene("lobby")
 
 
-func _on_phase_changed(previous: String, new_phase: String) -> void:
-	print("Phase: %s -> %s" % [previous, new_phase])
-	# Scene switching will be implemented as scenes are built
+func _on_phase_changed(_previous: String, new_phase: String) -> void:
+	print("Phase: %s -> %s" % [_previous, new_phase])
 	match new_phase:
 		"lobby":
 			_load_scene("lobby")
 		"dealing":
-			pass  # TODO: dealing scene
+			pass
 		"describing":
-			pass  # TODO: waiting for emojis scene
+			pass
 		"decoy_rounds":
-			pass  # TODO: decoy round scene
+			pass
 		"ended":
-			pass  # TODO: final results scene
+			pass
 
 
 func _load_scene(scene_key: String) -> void:
-	if scene_key not in SCENES:
+	if not SCENES.has(scene_key):
 		push_warning("Unknown scene: %s" % scene_key)
 		return
 
