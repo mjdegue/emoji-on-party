@@ -11,7 +11,6 @@ var network: Node
 
 
 func _ready() -> void:
-	# Walk up to Main and grab references
 	var main := _find_main()
 	if main == null:
 		push_error("LobbyScene: Could not find Main node")
@@ -55,7 +54,6 @@ func _on_start_pressed() -> void:
 
 
 func _update_ui() -> void:
-	# Update player list
 	for child in player_list.get_children():
 		child.queue_free()
 
@@ -67,11 +65,18 @@ func _update_ui() -> void:
 	for pid in game.players:
 		var p: Dictionary = game.players[pid]
 		var label := Label.new()
-		var status := " (disconnected)" if not p.is_connected else ""
-		var creator := " [HOST]" if p.is_creator else ""
-		label.text = "%s%s%s" % [p.name, creator, status]
+		var status := ""
+		if not p["is_connected"]:
+			status = " (disconnected)"
+		var creator := ""
+		if p["is_creator"]:
+			creator = " [HOST]"
+		label.text = "%s%s%s" % [p["name"], creator, status]
 		label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		player_list.add_child(label)
 
 	start_button.disabled = player_count < game.MIN_PLAYERS
-	status_label.text = "Waiting for players... (%d/%d)" % [player_count, game.MAX_PLAYERS] if player_count < game.MIN_PLAYERS else "Ready to start!"
+	if player_count < game.MIN_PLAYERS:
+		status_label.text = "Waiting for players... (%d/%d)" % [player_count, game.MAX_PLAYERS]
+	else:
+		status_label.text = "Ready to start!"

@@ -22,51 +22,30 @@ const LCG_A := 9301
 const LCG_C := 49297
 const LCG_M := 233280
 
-# --- Phase transitions ---
-const PHASE_TRANSITIONS := {
-	"lobby": "dealing",
-	"dealing": "describing",
-	"describing": "decoy_rounds",
-	"decoy_rounds": "ended",
-}
-
 # --- State ---
 var network: Node
 var phrase_manager: Node
 
-# Players: player_id → { id, name, is_connected, is_creator, joined_at }
 var players := {}
 var creator_id := ""
 
-# Game state
 var phase := "lobby"
 var current_round := 1
 var total_rounds := TOTAL_ROUNDS
 
-# Assignments: player_id → { phrase: { id, text, category, difficulty }, emoji_string: "" }
 var assignments := {}
-
-# Permanent storage (accumulated across emojis)
-# decoys: target_player_id → [{ text, author_id, author_name, submitted_at }]
 var decoys := {}
-# guesses: guesser_id → { target_player_id → { selected_option_id, submitted_at } }
 var guesses := {}
-
-# Cumulative scores: player_id → int
 var cumulative_scores := {}
 
 # Sequential emoji processing
 var emoji_processing_order: Array[String] = []
 var current_emoji_index := -1
-var current_sub_phase := ""  # "collecting_decoys" | "collecting_guesses"
+var current_sub_phase := ""
 
-# Temporary per-emoji storage (cleared after each emoji)
-# player_id → { text, author_id, author_name, submitted_at }
 var current_emoji_decoys := {}
-# player_id → { selected_option_id, submitted_at }
 var current_emoji_guesses := {}
 
-# Timestamps
 var started_at := 0
 var ended_at := 0
 
@@ -94,27 +73,26 @@ func _on_player_joined(player_id: String, player_name: String) -> void:
 		network.send_to_player(player_id, "error", {"message": "Game already in progress"})
 		return
 
+	var is_first := players.is_empty()
 	var player := {
 		"id": player_id,
 		"name": player_name,
 		"is_connected": true,
-		"is_creator": players.is_empty(),
+		"is_creator": is_first,
 		"joined_at": Time.get_ticks_msec(),
 	}
-	if player.is_creator:
+	if is_first:
 		creator_id = player_id
 	players[player_id] = player
 	cumulative_scores[player_id] = 0
 
 	player_added.emit(player_id, player_name)
 
-	# Confirm to the joining player
 	network.send_to_player(player_id, "join_confirmed", {
 		"playerId": player_id,
 		"sessionState": _get_lobby_state(),
 	})
 
-	# Notify all other players
 	network.send_to_all("player_joined", {
 		"playerId": player_id,
 		"playerName": player_name,
@@ -122,11 +100,10 @@ func _on_player_joined(player_id: String, player_name: String) -> void:
 
 
 func _on_player_disconnected(player_id: String) -> void:
-	if player_id not in players:
+	if not players.has(player_id):
 		return
-	players[player_id].is_connected = false
+	players[player_id]["is_connected"] = false
 	player_removed.emit(player_id)
-
 	network.send_to_all("player_disconnected", {"playerId": player_id})
 
 
@@ -159,11 +136,10 @@ func start_game() -> void:
 
 	network.send_to_all("game_started", {"phase": "dealing"})
 
-	# Send each player their phrase
-	for player_id in assignments:
-		var assignment: Dictionary = assignments[player_id]
-		network.send_to_player(player_id, "phrase_assigned", {
-			"phrase": assignment.phrase,
+	for pid in assignments:
+		var a: Dictionary = assignments[pid]
+		network.send_to_player(pid, "phrase_assigned", {
+			"phrase": a["phrase"],
 		})
 
 	_set_phase("describing")
@@ -206,8 +182,13 @@ func _deal_phrases() -> void:
 	assignments.clear()
 	for i in range(player_ids.size()):
 		var pid: String = player_ids[i]
+		var phrase: Dictionary
+		if i < selected.size():
+			phrase = selected[i]
+		else:
+			phrase = {"id": "", "text": "???", "category": "unknown", "difficulty": "easy"}
 		assignments[pid] = {
-			"phrase": selected[i] if i < selected.size() else {"id": "", "text": "???", "category": "unknown", "difficulty": "easy"},
+			"phrase": phrase,
 			"emoji_string": "",
 		}
 
@@ -217,7 +198,7 @@ func _deal_phrases() -> void:
 func _handle_submit_emoji(player_id: String, payload: Dictionary) -> void:
 	if phase != "describing":
 		return
-	if player_id not in assignments:
+	if not assignments.has(player_id):
 		return
 
 	var emoji_string: String = payload.get("emojiString", "").strip_edges()
@@ -225,9 +206,8 @@ func _handle_submit_emoji(player_id: String, payload: Dictionary) -> void:
 		network.send_to_player(player_id, "error", {"message": "Invalid emoji string"})
 		return
 
-	assignments[player_id].emoji_string = emoji_string
+	assignments[player_id]["emoji_string"] = emoji_string
 
-	# Broadcast submission progress
 	var submitted := _count_emoji_submissions()
 	network.send_to_all("player_action", {
 		"action": "emoji_submitted",
@@ -245,7 +225,7 @@ func _handle_submit_emoji(player_id: String, payload: Dictionary) -> void:
 func _initialize_emoji_processing() -> void:
 	emoji_processing_order.clear()
 	for pid in players:
-		if pid in assignments and assignments[pid].emoji_string != "":
+		if assignments.has(pid) and assignments[pid]["emoji_string"] != "":
 			emoji_processing_order.append(pid)
 	emoji_processing_order.shuffle()
 	current_emoji_index = 0
@@ -261,17 +241,18 @@ func _broadcast_decoy_round() -> void:
 
 	var target_id: String = emoji_processing_order[current_emoji_index]
 	var assignment: Dictionary = assignments[target_id]
-	var target_name: String = players[target_id].name
+	var target_name: String = players[target_id]["name"]
 
 	current_sub_phase = "collecting_decoys"
 	current_emoji_decoys.clear()
 	current_emoji_guesses.clear()
 
+	var phrase_data: Dictionary = assignment["phrase"]
 	network.send_to_all("decoy_round_started", {
 		"targetPlayerId": target_id,
 		"targetPlayerName": target_name,
-		"emojiSelection": assignment.emoji_string,
-		"category": assignment.phrase.category,
+		"emojiSelection": assignment["emoji_string"],
+		"category": phrase_data["category"],
 		"currentEmojiIndex": current_emoji_index,
 		"totalEmojis": emoji_processing_order.size(),
 	})
@@ -285,7 +266,7 @@ func _handle_submit_decoy(player_id: String, payload: Dictionary) -> void:
 
 	var target_id: String = emoji_processing_order[current_emoji_index]
 	if player_id == target_id:
-		return  # Author can't submit decoy for own emoji
+		return
 
 	var decoy_text: String = payload.get("decoyText", "").strip_edges()
 	if decoy_text.length() < DECOY_MIN_LENGTH or decoy_text.length() > DECOY_MAX_LENGTH:
@@ -295,11 +276,11 @@ func _handle_submit_decoy(player_id: String, payload: Dictionary) -> void:
 	current_emoji_decoys[player_id] = {
 		"text": decoy_text,
 		"author_id": player_id,
-		"author_name": players[player_id].name,
+		"author_name": players[player_id]["name"],
 		"submitted_at": Time.get_ticks_msec(),
 	}
 
-	var expected := players.size() - 1  # Everyone except the emoji author
+	var expected := players.size() - 1
 	var submitted := current_emoji_decoys.size()
 
 	network.send_to_all("player_action", {
@@ -322,15 +303,14 @@ func _start_guessing() -> void:
 	var target_id: String = emoji_processing_order[current_emoji_index]
 	var all_phrases := _build_guessing_options(target_id)
 
-	# Send personalized options to each player (excluding their own decoy)
 	for pid in players:
 		if pid == target_id:
 			continue
 		var personalized := _filter_own_decoy(all_phrases, pid)
 		network.send_to_player(pid, "guessing_options", {
 			"targetPlayerId": target_id,
-			"targetPlayerName": players[target_id].name,
-			"emojiSelection": assignments[target_id].emoji_string,
+			"targetPlayerName": players[target_id]["name"],
+			"emojiSelection": assignments[target_id]["emoji_string"],
 			"phrases": personalized,
 			"currentEmojiIndex": current_emoji_index,
 			"totalEmojis": emoji_processing_order.size(),
@@ -345,23 +325,22 @@ func _start_guessing() -> void:
 func _build_guessing_options(target_id: String) -> Array:
 	var options: Array = []
 
-	# Real phrase first
+	var target_assignment: Dictionary = assignments[target_id]
+	var target_phrase: Dictionary = target_assignment["phrase"]
 	options.append({
-		"text": assignments[target_id].phrase.text,
+		"text": target_phrase["text"],
 		"is_real": true,
 		"author_id": target_id,
 	})
 
-	# All decoys
 	for pid in current_emoji_decoys:
 		var decoy: Dictionary = current_emoji_decoys[pid]
 		options.append({
-			"text": decoy.text,
+			"text": decoy["text"],
 			"is_real": false,
-			"author_id": decoy.author_id,
+			"author_id": decoy["author_id"],
 		})
 
-	# Deterministic shuffle so reveal can reconstruct order
 	options = _shuffle_with_seed(options, current_emoji_index)
 	return options
 
@@ -371,10 +350,10 @@ func _filter_own_decoy(all_phrases: Array, player_id: String) -> Array:
 	var removed_own := false
 	for i in range(all_phrases.size()):
 		var p: Dictionary = all_phrases[i]
-		if not removed_own and not p.is_real and p.author_id == player_id:
+		if not removed_own and not p["is_real"] and p["author_id"] == player_id:
 			removed_own = true
 			continue
-		filtered.append({"text": p.text, "optionId": i})
+		filtered.append({"text": p["text"], "optionId": i})
 	return filtered
 
 
@@ -417,28 +396,23 @@ func _do_reveal() -> void:
 	var reveal_phrases := _build_reveal_data(target_id, all_options)
 
 	network.send_to_all("round_reveal", {
-		"emojiSelection": assignments[target_id].emoji_string,
+		"emojiSelection": assignments[target_id]["emoji_string"],
 		"user": target_id,
-		"userName": players[target_id].name,
+		"userName": players[target_id]["name"],
 		"phrases": reveal_phrases,
 		"currentEmojiIndex": current_emoji_index,
 		"totalEmojis": emoji_processing_order.size(),
 	})
 
-	# Calculate scores
 	var score_deltas := _calculate_emoji_scores(target_id, all_options)
 	_apply_score_deltas(score_deltas)
-
-	# Archive data
 	_archive_current_emoji_data(target_id)
 
-	# Send score update
 	var is_last := current_emoji_index >= emoji_processing_order.size() - 1
 	var score_payload := _build_score_update(score_deltas, is_last)
 	network.send_to_all("score_update", score_payload)
 	scores_updated.emit(cumulative_scores.duplicate())
 
-	# Advance
 	if is_last:
 		_end_game()
 	else:
@@ -448,20 +422,25 @@ func _do_reveal() -> void:
 		_broadcast_decoy_round()
 
 
-func _build_reveal_data(target_id: String, all_options: Array) -> Array:
+func _build_reveal_data(_target_id: String, all_options: Array) -> Array:
 	var reveal: Array = []
 	for i in range(all_options.size()):
 		var opt: Dictionary = all_options[i]
-		var selected_by: Array[String] = []
+		var selected_by: Array = []
 		for guesser_id in current_emoji_guesses:
-			if current_emoji_guesses[guesser_id].selected_option_id == i:
+			var guess: Dictionary = current_emoji_guesses[guesser_id]
+			if guess["selected_option_id"] == i:
 				selected_by.append(guesser_id)
+		var author_id: String = opt["author_id"]
+		var author_name := "Unknown"
+		if players.has(author_id):
+			author_name = players[author_id]["name"]
 		reveal.append({
-			"phrase": opt.text,
-			"user": opt.author_id,
-			"userName": players.get(opt.author_id, {}).get("name", "Unknown"),
+			"phrase": opt["text"],
+			"user": author_id,
+			"userName": author_name,
 			"selectedBy": selected_by,
-			"isReal": opt.is_real,
+			"isReal": opt["is_real"],
 			"selectionCount": selected_by.size(),
 		})
 	return reveal
@@ -472,61 +451,60 @@ func _calculate_emoji_scores(target_id: String, all_options: Array) -> Dictionar
 	for pid in players:
 		deltas[pid] = {"correct_guesses": 0, "fooled_players": 0, "clarity_bonus": 0, "total": 0}
 
-	var real_phrase: String = assignments[target_id].phrase.text
 	var correct_count := 0
 
 	for guesser_id in current_emoji_guesses:
 		var guess: Dictionary = current_emoji_guesses[guesser_id]
-		var option_id: int = guess.selected_option_id
+		var option_id: int = guess["selected_option_id"]
 
 		if option_id < 0 or option_id >= all_options.size():
 			continue
 
 		var selected_opt: Dictionary = all_options[option_id]
 
-		if selected_opt.is_real:
-			# Correct guess
-			deltas[guesser_id].correct_guesses += SCORE_CORRECT_GUESS
-			deltas[guesser_id].total += SCORE_CORRECT_GUESS
+		if selected_opt["is_real"]:
+			deltas[guesser_id]["correct_guesses"] += SCORE_CORRECT_GUESS
+			deltas[guesser_id]["total"] += SCORE_CORRECT_GUESS
 			correct_count += 1
 		else:
-			# Fooled by a decoy — credit the decoy author
-			var decoy_author: String = selected_opt.author_id
-			if decoy_author in deltas:
-				deltas[decoy_author].fooled_players += SCORE_DECOY_FOOL
-				deltas[decoy_author].total += SCORE_DECOY_FOOL
+			var decoy_author: String = selected_opt["author_id"]
+			if deltas.has(decoy_author):
+				deltas[decoy_author]["fooled_players"] += SCORE_DECOY_FOOL
+				deltas[decoy_author]["total"] += SCORE_DECOY_FOOL
 
-	# Clarity bonus for emoji author
 	var num_guessers := current_emoji_guesses.size()
 	if num_guessers > 0 and float(correct_count) / float(num_guessers) >= CLARITY_THRESHOLD:
-		deltas[target_id].clarity_bonus += SCORE_CLARITY_BONUS
-		deltas[target_id].total += SCORE_CLARITY_BONUS
+		deltas[target_id]["clarity_bonus"] += SCORE_CLARITY_BONUS
+		deltas[target_id]["total"] += SCORE_CLARITY_BONUS
 
 	return deltas
 
 
 func _apply_score_deltas(deltas: Dictionary) -> void:
 	for pid in deltas:
-		if pid in cumulative_scores:
-			cumulative_scores[pid] += deltas[pid].total
+		var delta: Dictionary = deltas[pid]
+		if cumulative_scores.has(pid):
+			cumulative_scores[pid] += delta["total"]
 		else:
-			cumulative_scores[pid] = deltas[pid].total
+			cumulative_scores[pid] = delta["total"]
 
 
 func _build_score_update(deltas: Dictionary, is_last: bool) -> Dictionary:
 	var player_scores: Array = []
 	for pid in players:
 		var delta: Dictionary = deltas.get(pid, {"correct_guesses": 0, "fooled_players": 0, "clarity_bonus": 0, "total": 0})
+		var post_score: int = cumulative_scores.get(pid, 0)
+		var pre_score: int = post_score - delta["total"]
 		player_scores.append({
 			"playerId": pid,
-			"playerName": players[pid].name,
-			"preRoundScore": cumulative_scores.get(pid, 0) - delta.total,
-			"postRoundScore": cumulative_scores.get(pid, 0),
-			"pointsEarned": delta.total,
+			"playerName": players[pid]["name"],
+			"preRoundScore": pre_score,
+			"postRoundScore": post_score,
+			"pointsEarned": delta["total"],
 			"breakdown": {
-				"correctGuesses": delta.correct_guesses,
-				"fooledPlayers": delta.fooled_players,
-				"clarityBonus": delta.clarity_bonus,
+				"correctGuesses": delta["correct_guesses"],
+				"fooledPlayers": delta["fooled_players"],
+				"clarityBonus": delta["clarity_bonus"],
 			},
 		})
 	return {
@@ -538,15 +516,13 @@ func _build_score_update(deltas: Dictionary, is_last: bool) -> Dictionary:
 
 
 func _archive_current_emoji_data(target_id: String) -> void:
-	# Archive decoys
-	if target_id not in decoys:
+	if not decoys.has(target_id):
 		decoys[target_id] = []
 	for pid in current_emoji_decoys:
 		decoys[target_id].append(current_emoji_decoys[pid])
 
-	# Archive guesses
 	for guesser_id in current_emoji_guesses:
-		if guesser_id not in guesses:
+		if not guesses.has(guesser_id):
 			guesses[guesser_id] = {}
 		guesses[guesser_id][target_id] = current_emoji_guesses[guesser_id]
 
@@ -567,10 +543,10 @@ func _build_final_rankings() -> Array:
 	for pid in players:
 		ranking.append({
 			"playerId": pid,
-			"playerName": players[pid].name,
+			"playerName": players[pid]["name"],
 			"totalScore": cumulative_scores.get(pid, 0),
 		})
-	ranking.sort_custom(func(a, b): return a.totalScore > b.totalScore)
+	ranking.sort_custom(func(a, b): return a["totalScore"] > b["totalScore"])
 	for i in range(ranking.size()):
 		ranking[i]["position"] = i + 1
 	return ranking
@@ -578,7 +554,6 @@ func _build_final_rankings() -> Array:
 
 func _build_game_stats() -> Dictionary:
 	var total_guesses := 0
-	var correct_guesses := 0
 	for guesser_id in guesses:
 		for target_id in guesses[guesser_id]:
 			total_guesses += 1
@@ -622,7 +597,7 @@ func _shuffle_with_seed(arr: Array, seed_val: int) -> Array:
 func _count_emoji_submissions() -> int:
 	var count := 0
 	for pid in assignments:
-		if assignments[pid].emoji_string != "":
+		if assignments[pid]["emoji_string"] != "":
 			count += 1
 	return count
 
@@ -632,10 +607,10 @@ func _get_lobby_state() -> Dictionary:
 	for pid in players:
 		var p: Dictionary = players[pid]
 		player_list.append({
-			"id": p.id,
-			"name": p.name,
-			"isCreator": p.is_creator,
-			"isConnected": p.is_connected,
+			"id": p["id"],
+			"name": p["name"],
+			"isCreator": p["is_creator"],
+			"isConnected": p["is_connected"],
 		})
 	return {
 		"phase": phase,
