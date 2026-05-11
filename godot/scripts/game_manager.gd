@@ -177,7 +177,7 @@ func _deal_phrases() -> void:
 	var player_ids := players.keys()
 	var exclude_ids: Array[String] = []
 	var phrases_needed := player_ids.size()
-	var selected := phrase_manager.get_random_phrases(phrases_needed, exclude_ids)
+	var selected = phrase_manager.get_random_phrases(phrases_needed, exclude_ids)
 
 	assignments.clear()
 	for i in range(player_ids.size()):
