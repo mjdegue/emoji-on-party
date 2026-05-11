@@ -44,8 +44,8 @@ func _process(delta: float) -> void:
 	var new_state := _socket.get_ready_state()
 
 	if new_state != _state:
-		_on_state_changed(_state, new_state)
 		_state = new_state
+		_on_state_changed(new_state)
 
 	match _state:
 		WebSocketPeer.STATE_OPEN:
@@ -64,7 +64,7 @@ func _process(delta: float) -> void:
 					connect_to_relay()
 
 
-func _on_state_changed(old_state: int, new_state: int) -> void:
+func _on_state_changed(new_state: int) -> void:
 	match new_state:
 		WebSocketPeer.STATE_OPEN:
 			print("Connected to relay")
