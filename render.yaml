@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: emoji-on-relay
+    runtime: node
+    rootDir: relay
+    buildCommand: npm install
+    startCommand: node src/server.js
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production

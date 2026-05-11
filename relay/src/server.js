@@ -1,3 +1,4 @@
+import { createServer } from 'node:http';
 import { WebSocketServer } from 'ws';
 import { SessionRegistry } from './SessionRegistry.js';
 
@@ -7,9 +8,22 @@ const STALE_SESSION_MAX_AGE_MS = 24 * 60 * 60 * 1000;
 
 const registry = new SessionRegistry();
 
-const wss = new WebSocketServer({ port: PORT });
+// HTTP server for health checks (required by cloud platforms)
+const httpServer = createServer((req, res) => {
+  if (req.url === '/health') {
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ status: 'ok', sessions: registry.size }));
+  } else {
+    res.writeHead(404);
+    res.end();
+  }
+});
 
-console.log(`Relay server listening on port ${PORT}`);
+const wss = new WebSocketServer({ server: httpServer });
+
+httpServer.listen(PORT, () => {
+  console.log(`Relay server listening on port ${PORT}`);
+});
 
 wss.on('connection', (ws) => {
   ws.isAlive = true;
@@ -95,7 +109,6 @@ function handlePlayerJoin(ws, msg) {
 
   console.log(`Player "${name}" (${playerId}) joined session ${session.code}`);
 
-  // Forward the join to the host so it can process game logic
   sendTo(session.host, {
     type: 'player_join',
     payload: { playerId, name },
@@ -121,7 +134,6 @@ function handlePlayerRejoin(ws, msg) {
     return;
   }
 
-  // If the client knows their old playerId, swap the WebSocket directly
   if (oldPlayerId && session.clients.has(oldPlayerId)) {
     session.clients.set(oldPlayerId, ws);
     ws.role = 'client';
@@ -138,7 +150,6 @@ function handlePlayerRejoin(ws, msg) {
     return;
   }
 
-  // Otherwise forward to host to match by name
   const tempId = crypto.randomUUID();
   registry.addClient(session.code, tempId, ws);
   ws.role = 'client';
@@ -167,7 +178,6 @@ function handleGameMessage(ws, msg) {
   }
 
   if (ws.role === 'client') {
-    // Client messages always go to the host
     sendTo(session.host, {
       ...msg,
       from: ws.playerId,
@@ -181,7 +191,6 @@ function routeHostMessage(session, msg) {
   const to = msg.to;
   if (!to) return;
 
-  // Strip routing field before forwarding
   const forwarded = { ...msg };
   delete forwarded.to;
   forwarded.from = 'host';
@@ -206,7 +215,6 @@ function handleDisconnect(ws) {
     const session = registry.getSession(ws.sessionCode);
     if (session) {
       console.log(`Host disconnected from session ${ws.sessionCode}`);
-      // Notify all clients that the host is gone
       for (const [, clientWs] of session.clients) {
         sendTo(clientWs, { type: 'host_disconnected', from: 'relay' });
       }
@@ -217,7 +225,6 @@ function handleDisconnect(ws) {
     if (session) {
       console.log(`Player ${ws.playerId} disconnected from session ${ws.sessionCode}`);
       registry.removeClient(ws.sessionCode, ws.playerId);
-      // Notify the host
       sendTo(session.host, {
         type: 'player_disconnected',
         payload: { playerId: ws.playerId },
@@ -233,7 +240,6 @@ function sendTo(ws, msg) {
   }
 }
 
-// Heartbeat: detect dead connections
 const heartbeat = setInterval(() => {
   wss.clients.forEach((ws) => {
     if (!ws.isAlive) {
@@ -245,7 +251,6 @@ const heartbeat = setInterval(() => {
   });
 }, HEARTBEAT_INTERVAL_MS);
 
-// Periodic cleanup of stale sessions
 const cleanup = setInterval(() => {
   const removed = registry.cleanupStaleSessions(STALE_SESSION_MAX_AGE_MS);
   if (removed > 0) console.log(`Cleaned up ${removed} stale sessions`);
@@ -256,4 +261,4 @@ wss.on('close', () => {
   clearInterval(cleanup);
 });
 
-export { wss, registry };
+export { wss, registry, httpServer };

@@ -8,7 +8,7 @@ signal player_rejoined(player_id: String, player_name: String)
 signal player_disconnected(player_id: String)
 signal message_received(type: String, payload: Dictionary, from: String)
 
-const RELAY_URL := "ws://localhost:8080"
+@export var relay_url := "ws://localhost:8080"
 const RECONNECT_DELAY := 3.0
 const HEARTBEAT_INTERVAL := 25.0
 
@@ -21,7 +21,7 @@ var _should_reconnect := false
 
 
 func connect_to_relay() -> void:
-	var err := _socket.connect_to_url(RELAY_URL)
+	var err := _socket.connect_to_url(relay_url)
 	if err != OK:
 		push_error("Failed to connect to relay: %s" % err)
 		return
