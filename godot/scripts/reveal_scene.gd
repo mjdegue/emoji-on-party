@@ -13,10 +13,10 @@ var _players_ref := {}
 var _countdown := 5.0
 var _counting_down := false
 
-const VOTE_TICK_DELAY := 0.25
-const VOTER_SHOW_DELAY := 0.35
-const POST_SHAKE_PAUSE := 0.3
-const BETWEEN_CARDS_PAUSE := 1.2
+const VOTE_TICK_DELAY := 0.5
+const VOTER_SHOW_DELAY := 0.7
+const POST_SHAKE_PAUSE := 0.8
+const BETWEEN_CARDS_PAUSE := 2.5
 const POST_SEQUENCE_COUNTDOWN := 5.0
 
 
@@ -112,14 +112,14 @@ func _reveal_single(phrase: Dictionary) -> void:
 	info_hbox.add_child(verdict_label)
 
 	UI.slide_in_from_bottom(panel, 0.4)
-	await get_tree().create_timer(0.6).timeout
+	await get_tree().create_timer(1.2).timeout
 	if not is_inside_tree():
 		return
 
 	# --- Step 2: Count up votes ---
 	if vote_count == 0:
 		vote_label.text = "0 votes"
-		await get_tree().create_timer(0.3).timeout
+		await get_tree().create_timer(0.6).timeout
 	else:
 		for i in range(1, vote_count + 1):
 			if not is_inside_tree():
