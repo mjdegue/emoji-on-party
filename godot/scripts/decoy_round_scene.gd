@@ -26,7 +26,7 @@ func setup(player_name: String, emoji: String, current_index: int, total: int) -
 	submission_progress.text = ""
 
 	UI.fade_in(self, 0.3)
-	UI.shimmer(emoji_display, UI.TEXT_COLOR, UI.PRIMARY)
+	UI.shimmer(phase_label)
 
 
 func set_sub_phase(sub_phase: String) -> void:
