@@ -2,3 +2,8 @@ node_modules/
 dist/
 .env
 .env.local
+
+# Godot
+.godot/
+*.import
+export_presets.cfg

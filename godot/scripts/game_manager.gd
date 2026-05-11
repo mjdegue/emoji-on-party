@@ -1,0 +1,652 @@
+extends Node
+
+signal phase_changed(previous_phase: String, new_phase: String)
+signal player_added(player_id: String, player_name: String)
+signal player_removed(player_id: String)
+signal scores_updated(scores: Dictionary)
+
+# --- Constants ---
+const MIN_PLAYERS := 1
+const MAX_PLAYERS := 6
+const TOTAL_ROUNDS := 3
+const SCORE_CORRECT_GUESS := 2
+const SCORE_DECOY_FOOL := 1
+const SCORE_CLARITY_BONUS := 1
+const CLARITY_THRESHOLD := 0.5
+const EMOJI_MAX_LENGTH := 100
+const DECOY_MIN_LENGTH := 3
+const DECOY_MAX_LENGTH := 50
+
+# LCG constants for deterministic shuffle
+const LCG_A := 9301
+const LCG_C := 49297
+const LCG_M := 233280
+
+# --- Phase transitions ---
+const PHASE_TRANSITIONS := {
+	"lobby": "dealing",
+	"dealing": "describing",
+	"describing": "decoy_rounds",
+	"decoy_rounds": "ended",
+}
+
+# --- State ---
+var network: Node
+var phrase_manager: Node
+
+# Players: player_id → { id, name, is_connected, is_creator, joined_at }
+var players := {}
+var creator_id := ""
+
+# Game state
+var phase := "lobby"
+var current_round := 1
+var total_rounds := TOTAL_ROUNDS
+
+# Assignments: player_id → { phrase: { id, text, category, difficulty }, emoji_string: "" }
+var assignments := {}
+
+# Permanent storage (accumulated across emojis)
+# decoys: target_player_id → [{ text, author_id, author_name, submitted_at }]
+var decoys := {}
+# guesses: guesser_id → { target_player_id → { selected_option_id, submitted_at } }
+var guesses := {}
+
+# Cumulative scores: player_id → int
+var cumulative_scores := {}
+
+# Sequential emoji processing
+var emoji_processing_order: Array[String] = []
+var current_emoji_index := -1
+var current_sub_phase := ""  # "collecting_decoys" | "collecting_guesses"
+
+# Temporary per-emoji storage (cleared after each emoji)
+# player_id → { text, author_id, author_name, submitted_at }
+var current_emoji_decoys := {}
+# player_id → { selected_option_id, submitted_at }
+var current_emoji_guesses := {}
+
+# Timestamps
+var started_at := 0
+var ended_at := 0
+
+
+func initialize(net: Node, phrases: Node) -> void:
+	network = net
+	phrase_manager = phrases
+	network.player_joined.connect(_on_player_joined)
+	network.player_disconnected.connect(_on_player_disconnected)
+	network.message_received.connect(_on_message_received)
+	network.connected.connect(_on_network_connected)
+
+
+func _on_network_connected() -> void:
+	network.create_session()
+
+
+# --- Player Management ---
+
+func _on_player_joined(player_id: String, player_name: String) -> void:
+	if players.size() >= MAX_PLAYERS:
+		network.send_to_player(player_id, "error", {"message": "Session is full"})
+		return
+	if phase != "lobby":
+		network.send_to_player(player_id, "error", {"message": "Game already in progress"})
+		return
+
+	var player := {
+		"id": player_id,
+		"name": player_name,
+		"is_connected": true,
+		"is_creator": players.is_empty(),
+		"joined_at": Time.get_ticks_msec(),
+	}
+	if player.is_creator:
+		creator_id = player_id
+	players[player_id] = player
+	cumulative_scores[player_id] = 0
+
+	player_added.emit(player_id, player_name)
+
+	# Confirm to the joining player
+	network.send_to_player(player_id, "join_confirmed", {
+		"playerId": player_id,
+		"sessionState": _get_lobby_state(),
+	})
+
+	# Notify all other players
+	network.send_to_all("player_joined", {
+		"playerId": player_id,
+		"playerName": player_name,
+	})
+
+
+func _on_player_disconnected(player_id: String) -> void:
+	if player_id not in players:
+		return
+	players[player_id].is_connected = false
+	player_removed.emit(player_id)
+
+	network.send_to_all("player_disconnected", {"playerId": player_id})
+
+
+# --- Message Handling ---
+
+func _on_message_received(type: String, payload: Dictionary, from: String) -> void:
+	match type:
+		"submit_emoji":
+			_handle_submit_emoji(from, payload)
+		"submit_decoy":
+			_handle_submit_decoy(from, payload)
+		"submit_guess":
+			_handle_submit_guess(from, payload)
+
+
+# --- Game Flow (called by host input) ---
+
+func start_game() -> void:
+	if players.size() < MIN_PLAYERS:
+		push_warning("Not enough players")
+		return
+	if phase != "lobby":
+		push_warning("Game already started")
+		return
+
+	started_at = Time.get_ticks_msec()
+	current_round = 1
+	_set_phase("dealing")
+	_deal_phrases()
+
+	network.send_to_all("game_started", {"phase": "dealing"})
+
+	# Send each player their phrase
+	for player_id in assignments:
+		var assignment: Dictionary = assignments[player_id]
+		network.send_to_player(player_id, "phrase_assigned", {
+			"phrase": assignment.phrase,
+		})
+
+	_set_phase("describing")
+
+
+func advance_phase() -> void:
+	match phase:
+		"describing":
+			_start_decoy_rounds()
+		"decoy_rounds":
+			_advance_sub_phase()
+
+
+func _start_decoy_rounds() -> void:
+	_set_phase("decoy_rounds")
+	_initialize_emoji_processing()
+	_broadcast_decoy_round()
+
+
+func _advance_sub_phase() -> void:
+	match current_sub_phase:
+		"collecting_decoys":
+			_start_guessing()
+		"collecting_guesses":
+			_do_reveal()
+
+
+func force_advance_sub_phase() -> void:
+	_advance_sub_phase()
+
+
+# --- Deal Phrases ---
+
+func _deal_phrases() -> void:
+	var player_ids := players.keys()
+	var exclude_ids: Array[String] = []
+	var phrases_needed := player_ids.size()
+	var selected := phrase_manager.get_random_phrases(phrases_needed, exclude_ids)
+
+	assignments.clear()
+	for i in range(player_ids.size()):
+		var pid: String = player_ids[i]
+		assignments[pid] = {
+			"phrase": selected[i] if i < selected.size() else {"id": "", "text": "???", "category": "unknown", "difficulty": "easy"},
+			"emoji_string": "",
+		}
+
+
+# --- Emoji Submission ---
+
+func _handle_submit_emoji(player_id: String, payload: Dictionary) -> void:
+	if phase != "describing":
+		return
+	if player_id not in assignments:
+		return
+
+	var emoji_string: String = payload.get("emojiString", "").strip_edges()
+	if emoji_string.is_empty() or emoji_string.length() > EMOJI_MAX_LENGTH:
+		network.send_to_player(player_id, "error", {"message": "Invalid emoji string"})
+		return
+
+	assignments[player_id].emoji_string = emoji_string
+
+	# Broadcast submission progress
+	var submitted := _count_emoji_submissions()
+	network.send_to_all("player_action", {
+		"action": "emoji_submitted",
+		"playerId": player_id,
+		"submittedCount": submitted,
+		"expectedCount": players.size(),
+	})
+
+	if submitted >= players.size():
+		_start_decoy_rounds()
+
+
+# --- Sequential Emoji Processing ---
+
+func _initialize_emoji_processing() -> void:
+	emoji_processing_order.clear()
+	for pid in players:
+		if pid in assignments and assignments[pid].emoji_string != "":
+			emoji_processing_order.append(pid)
+	emoji_processing_order.shuffle()
+	current_emoji_index = 0
+	current_sub_phase = "collecting_decoys"
+	current_emoji_decoys.clear()
+	current_emoji_guesses.clear()
+
+
+func _broadcast_decoy_round() -> void:
+	if current_emoji_index >= emoji_processing_order.size():
+		_end_game()
+		return
+
+	var target_id: String = emoji_processing_order[current_emoji_index]
+	var assignment: Dictionary = assignments[target_id]
+	var target_name: String = players[target_id].name
+
+	current_sub_phase = "collecting_decoys"
+	current_emoji_decoys.clear()
+	current_emoji_guesses.clear()
+
+	network.send_to_all("decoy_round_started", {
+		"targetPlayerId": target_id,
+		"targetPlayerName": target_name,
+		"emojiSelection": assignment.emoji_string,
+		"category": assignment.phrase.category,
+		"currentEmojiIndex": current_emoji_index,
+		"totalEmojis": emoji_processing_order.size(),
+	})
+
+
+# --- Decoy Submission ---
+
+func _handle_submit_decoy(player_id: String, payload: Dictionary) -> void:
+	if phase != "decoy_rounds" or current_sub_phase != "collecting_decoys":
+		return
+
+	var target_id: String = emoji_processing_order[current_emoji_index]
+	if player_id == target_id:
+		return  # Author can't submit decoy for own emoji
+
+	var decoy_text: String = payload.get("decoyText", "").strip_edges()
+	if decoy_text.length() < DECOY_MIN_LENGTH or decoy_text.length() > DECOY_MAX_LENGTH:
+		network.send_to_player(player_id, "error", {"message": "Decoy must be %d-%d characters" % [DECOY_MIN_LENGTH, DECOY_MAX_LENGTH]})
+		return
+
+	current_emoji_decoys[player_id] = {
+		"text": decoy_text,
+		"author_id": player_id,
+		"author_name": players[player_id].name,
+		"submitted_at": Time.get_ticks_msec(),
+	}
+
+	var expected := players.size() - 1  # Everyone except the emoji author
+	var submitted := current_emoji_decoys.size()
+
+	network.send_to_all("player_action", {
+		"action": "decoy_submitted",
+		"playerId": player_id,
+		"submittedCount": submitted,
+		"expectedCount": expected,
+	})
+
+	if submitted >= expected:
+		_start_guessing()
+
+
+# --- Guessing ---
+
+func _start_guessing() -> void:
+	current_sub_phase = "collecting_guesses"
+	current_emoji_guesses.clear()
+
+	var target_id: String = emoji_processing_order[current_emoji_index]
+	var all_phrases := _build_guessing_options(target_id)
+
+	# Send personalized options to each player (excluding their own decoy)
+	for pid in players:
+		if pid == target_id:
+			continue
+		var personalized := _filter_own_decoy(all_phrases, pid)
+		network.send_to_player(pid, "guessing_options", {
+			"targetPlayerId": target_id,
+			"targetPlayerName": players[target_id].name,
+			"emojiSelection": assignments[target_id].emoji_string,
+			"phrases": personalized,
+			"currentEmojiIndex": current_emoji_index,
+			"totalEmojis": emoji_processing_order.size(),
+		})
+
+	network.send_to_all("phase_changed", {
+		"previousPhase": "collecting_decoys",
+		"newPhase": "collecting_guesses",
+	})
+
+
+func _build_guessing_options(target_id: String) -> Array:
+	var options: Array = []
+
+	# Real phrase first
+	options.append({
+		"text": assignments[target_id].phrase.text,
+		"is_real": true,
+		"author_id": target_id,
+	})
+
+	# All decoys
+	for pid in current_emoji_decoys:
+		var decoy: Dictionary = current_emoji_decoys[pid]
+		options.append({
+			"text": decoy.text,
+			"is_real": false,
+			"author_id": decoy.author_id,
+		})
+
+	# Deterministic shuffle so reveal can reconstruct order
+	options = _shuffle_with_seed(options, current_emoji_index)
+	return options
+
+
+func _filter_own_decoy(all_phrases: Array, player_id: String) -> Array:
+	var filtered: Array = []
+	var removed_own := false
+	for i in range(all_phrases.size()):
+		var p: Dictionary = all_phrases[i]
+		if not removed_own and not p.is_real and p.author_id == player_id:
+			removed_own = true
+			continue
+		filtered.append({"text": p.text, "optionId": i})
+	return filtered
+
+
+func _handle_submit_guess(player_id: String, payload: Dictionary) -> void:
+	if phase != "decoy_rounds" or current_sub_phase != "collecting_guesses":
+		return
+
+	var target_id: String = emoji_processing_order[current_emoji_index]
+	if player_id == target_id:
+		return
+
+	var selected_option_id: int = payload.get("selectedOptionId", -1)
+	if selected_option_id < 0:
+		return
+
+	current_emoji_guesses[player_id] = {
+		"selected_option_id": selected_option_id,
+		"submitted_at": Time.get_ticks_msec(),
+	}
+
+	var expected := players.size() - 1
+	var submitted := current_emoji_guesses.size()
+
+	network.send_to_all("player_action", {
+		"action": "guess_submitted",
+		"playerId": player_id,
+		"submittedCount": submitted,
+		"expectedCount": expected,
+	})
+
+	if submitted >= expected:
+		_do_reveal()
+
+
+# --- Reveal & Scoring ---
+
+func _do_reveal() -> void:
+	var target_id: String = emoji_processing_order[current_emoji_index]
+	var all_options := _build_guessing_options(target_id)
+	var reveal_phrases := _build_reveal_data(target_id, all_options)
+
+	network.send_to_all("round_reveal", {
+		"emojiSelection": assignments[target_id].emoji_string,
+		"user": target_id,
+		"userName": players[target_id].name,
+		"phrases": reveal_phrases,
+		"currentEmojiIndex": current_emoji_index,
+		"totalEmojis": emoji_processing_order.size(),
+	})
+
+	# Calculate scores
+	var score_deltas := _calculate_emoji_scores(target_id, all_options)
+	_apply_score_deltas(score_deltas)
+
+	# Archive data
+	_archive_current_emoji_data(target_id)
+
+	# Send score update
+	var is_last := current_emoji_index >= emoji_processing_order.size() - 1
+	var score_payload := _build_score_update(score_deltas, is_last)
+	network.send_to_all("score_update", score_payload)
+	scores_updated.emit(cumulative_scores.duplicate())
+
+	# Advance
+	if is_last:
+		_end_game()
+	else:
+		current_emoji_index += 1
+		current_emoji_decoys.clear()
+		current_emoji_guesses.clear()
+		_broadcast_decoy_round()
+
+
+func _build_reveal_data(target_id: String, all_options: Array) -> Array:
+	var reveal: Array = []
+	for i in range(all_options.size()):
+		var opt: Dictionary = all_options[i]
+		var selected_by: Array[String] = []
+		for guesser_id in current_emoji_guesses:
+			if current_emoji_guesses[guesser_id].selected_option_id == i:
+				selected_by.append(guesser_id)
+		reveal.append({
+			"phrase": opt.text,
+			"user": opt.author_id,
+			"userName": players.get(opt.author_id, {}).get("name", "Unknown"),
+			"selectedBy": selected_by,
+			"isReal": opt.is_real,
+			"selectionCount": selected_by.size(),
+		})
+	return reveal
+
+
+func _calculate_emoji_scores(target_id: String, all_options: Array) -> Dictionary:
+	var deltas := {}
+	for pid in players:
+		deltas[pid] = {"correct_guesses": 0, "fooled_players": 0, "clarity_bonus": 0, "total": 0}
+
+	var real_phrase: String = assignments[target_id].phrase.text
+	var correct_count := 0
+
+	for guesser_id in current_emoji_guesses:
+		var guess: Dictionary = current_emoji_guesses[guesser_id]
+		var option_id: int = guess.selected_option_id
+
+		if option_id < 0 or option_id >= all_options.size():
+			continue
+
+		var selected_opt: Dictionary = all_options[option_id]
+
+		if selected_opt.is_real:
+			# Correct guess
+			deltas[guesser_id].correct_guesses += SCORE_CORRECT_GUESS
+			deltas[guesser_id].total += SCORE_CORRECT_GUESS
+			correct_count += 1
+		else:
+			# Fooled by a decoy — credit the decoy author
+			var decoy_author: String = selected_opt.author_id
+			if decoy_author in deltas:
+				deltas[decoy_author].fooled_players += SCORE_DECOY_FOOL
+				deltas[decoy_author].total += SCORE_DECOY_FOOL
+
+	# Clarity bonus for emoji author
+	var num_guessers := current_emoji_guesses.size()
+	if num_guessers > 0 and float(correct_count) / float(num_guessers) >= CLARITY_THRESHOLD:
+		deltas[target_id].clarity_bonus += SCORE_CLARITY_BONUS
+		deltas[target_id].total += SCORE_CLARITY_BONUS
+
+	return deltas
+
+
+func _apply_score_deltas(deltas: Dictionary) -> void:
+	for pid in deltas:
+		if pid in cumulative_scores:
+			cumulative_scores[pid] += deltas[pid].total
+		else:
+			cumulative_scores[pid] = deltas[pid].total
+
+
+func _build_score_update(deltas: Dictionary, is_last: bool) -> Dictionary:
+	var player_scores: Array = []
+	for pid in players:
+		var delta: Dictionary = deltas.get(pid, {"correct_guesses": 0, "fooled_players": 0, "clarity_bonus": 0, "total": 0})
+		player_scores.append({
+			"playerId": pid,
+			"playerName": players[pid].name,
+			"preRoundScore": cumulative_scores.get(pid, 0) - delta.total,
+			"postRoundScore": cumulative_scores.get(pid, 0),
+			"pointsEarned": delta.total,
+			"breakdown": {
+				"correctGuesses": delta.correct_guesses,
+				"fooledPlayers": delta.fooled_players,
+				"clarityBonus": delta.clarity_bonus,
+			},
+		})
+	return {
+		"roundNumber": current_round,
+		"totalEmojis": emoji_processing_order.size(),
+		"isLastEmoji": is_last,
+		"playerScores": player_scores,
+	}
+
+
+func _archive_current_emoji_data(target_id: String) -> void:
+	# Archive decoys
+	if target_id not in decoys:
+		decoys[target_id] = []
+	for pid in current_emoji_decoys:
+		decoys[target_id].append(current_emoji_decoys[pid])
+
+	# Archive guesses
+	for guesser_id in current_emoji_guesses:
+		if guesser_id not in guesses:
+			guesses[guesser_id] = {}
+		guesses[guesser_id][target_id] = current_emoji_guesses[guesser_id]
+
+
+func _end_game() -> void:
+	ended_at = Time.get_ticks_msec()
+	_set_phase("ended")
+
+	var final_rankings := _build_final_rankings()
+	network.send_to_all("game_ended", {
+		"finalRankings": final_rankings,
+		"gameStats": _build_game_stats(),
+	})
+
+
+func _build_final_rankings() -> Array:
+	var ranking: Array = []
+	for pid in players:
+		ranking.append({
+			"playerId": pid,
+			"playerName": players[pid].name,
+			"totalScore": cumulative_scores.get(pid, 0),
+		})
+	ranking.sort_custom(func(a, b): return a.totalScore > b.totalScore)
+	for i in range(ranking.size()):
+		ranking[i]["position"] = i + 1
+	return ranking
+
+
+func _build_game_stats() -> Dictionary:
+	var total_guesses := 0
+	var correct_guesses := 0
+	for guesser_id in guesses:
+		for target_id in guesses[guesser_id]:
+			total_guesses += 1
+	return {
+		"totalRounds": current_round,
+		"totalGuesses": total_guesses,
+		"playerCount": players.size(),
+	}
+
+
+# --- Phase Management ---
+
+func _set_phase(new_phase: String) -> void:
+	var old := phase
+	phase = new_phase
+	phase_changed.emit(old, new_phase)
+
+	if old != new_phase:
+		network.send_to_all("phase_changed", {
+			"previousPhase": old,
+			"newPhase": new_phase,
+		})
+
+
+# --- Deterministic Shuffle ---
+
+func _shuffle_with_seed(arr: Array, seed_val: int) -> Array:
+	var result := arr.duplicate()
+	var rng := seed_val
+	for i in range(result.size() - 1, 0, -1):
+		rng = (rng * LCG_A + LCG_C) % LCG_M
+		var j := int(float(rng) / float(LCG_M) * float(i + 1))
+		var tmp = result[i]
+		result[i] = result[j]
+		result[j] = tmp
+	return result
+
+
+# --- Utilities ---
+
+func _count_emoji_submissions() -> int:
+	var count := 0
+	for pid in assignments:
+		if assignments[pid].emoji_string != "":
+			count += 1
+	return count
+
+
+func _get_lobby_state() -> Dictionary:
+	var player_list: Array = []
+	for pid in players:
+		var p: Dictionary = players[pid]
+		player_list.append({
+			"id": p.id,
+			"name": p.name,
+			"isCreator": p.is_creator,
+			"isConnected": p.is_connected,
+		})
+	return {
+		"phase": phase,
+		"players": player_list,
+		"sessionCode": network.get_session_code(),
+	}
+
+
+func get_player_count() -> int:
+	return players.size()
+
+
+func get_phase() -> String:
+	return phase

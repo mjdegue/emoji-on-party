@@ -1,0 +1,782 @@
+[
+  {
+    "Language": "English",
+    "Categories": [
+      {
+        "Category": "Movies",
+        "Phrases": [
+          {
+            "id": "b3f1b641-3721-4cd8-ae54-67c619b4b94c",
+            "text": "Harry Potter",
+            "difficulty": "easy"
+          },
+          {
+            "id": "7b5ae300-7af9-4471-88d0-1fc1611a8c7b",
+            "text": "The Lion King",
+            "difficulty": "easy"
+          },
+          {
+            "id": "7c164fbc-9f1c-49e7-88fb-5918cff650cb",
+            "text": "Finding Nemo",
+            "difficulty": "easy"
+          },
+          {
+            "id": "16af987e-4497-4a1b-9f26-00472af095c1",
+            "text": "Frozen",
+            "difficulty": "easy"
+          },
+          {
+            "id": "5ad65960-a1fd-4ba3-bd57-0576fe7bd52a",
+            "text": "Spider-Man",
+            "difficulty": "easy"
+          },
+          {
+            "id": "585ca8f0-b36a-40d6-9b2f-5aeda89eac47",
+            "text": "Batman",
+            "difficulty": "easy"
+          },
+          {
+            "id": "8662942a-34f6-4194-8dee-fc8abd180f69",
+            "text": "Toy Story",
+            "difficulty": "easy"
+          },
+          {
+            "id": "d9abdf15-09b9-44d1-ae12-0cbd86c21b0a",
+            "text": "The Little Mermaid",
+            "difficulty": "easy"
+          },
+          {
+            "id": "e9e1e97b-ae58-497c-a542-03233d29379b",
+            "text": "Star Wars",
+            "difficulty": "easy"
+          },
+          {
+            "id": "2f6c8364-c981-477b-8a80-616b9bfd663a",
+            "text": "Titanic",
+            "difficulty": "easy"
+          },
+          {
+            "id": "4df57096-2b94-4a99-8ba6-d93d4fa9aa6c",
+            "text": "The Avengers",
+            "difficulty": "medium"
+          },
+          {
+            "id": "3c077d10-f94d-419f-b140-d3b0849f45aa",
+            "text": "Jurassic Park",
+            "difficulty": "medium"
+          },
+          {
+            "id": "096205fd-605c-430b-9630-96ce238e86ba",
+            "text": "The Matrix",
+            "difficulty": "medium"
+          },
+          {
+            "id": "e53b4048-70e8-4d2a-90e1-e9060a46b8b8",
+            "text": "Pirates of the Caribbean",
+            "difficulty": "medium"
+          },
+          {
+            "id": "857f5c17-6752-434c-ac27-78b521d482dc",
+            "text": "Back to the Future",
+            "difficulty": "medium"
+          },
+          {
+            "id": "3b3658af-4475-4cf2-9eb4-c339358a0a0f",
+            "text": "The Hunger Games",
+            "difficulty": "medium"
+          },
+          {
+            "id": "b9e630a1-bb82-4cf6-864a-4d7d15159718",
+            "text": "Indiana Jones",
+            "difficulty": "medium"
+          },
+          {
+            "id": "7ecb7cbf-f032-42de-ace9-f207371643c8",
+            "text": "The Dark Knight",
+            "difficulty": "medium"
+          },
+          {
+            "id": "3fbc02b7-942b-49e9-945d-458c0e51ab7e",
+            "text": "Lord of the Rings",
+            "difficulty": "medium"
+          },
+          {
+            "id": "9b056995-44ad-48dd-9781-0856177581f9",
+            "text": "Guardians of the Galaxy",
+            "difficulty": "medium"
+          },
+          {
+            "id": "b7ea34ba-7e19-4afb-b2de-30aa0fc62d7f",
+            "text": "Blade Runner",
+            "difficulty": "spicy"
+          },
+          {
+            "id": "e1f42553-9bae-459b-8c9c-40d3fa99e6b9",
+            "text": "Pulp Fiction",
+            "difficulty": "spicy"
+          },
+          {
+            "id": "cfdde7cc-8b38-4c19-9b79-07e0556e4d6e",
+            "text": "The Shawshank Redemption",
+            "difficulty": "spicy"
+          },
+          {
+            "id": "29e4ea0c-d561-4e19-92af-ae404be4764d",
+            "text": "Citizen Kane",
+            "difficulty": "spicy"
+          },
+          {
+            "id": "f779c0c1-4ec5-47d9-9d71-6680d8a40313",
+            "text": "The Godfather",
+            "difficulty": "spicy"
+          }
+        ]
+      },
+      {
+        "Category": "Idioms",
+        "Phrases": [
+          {
+            "id": "e5cb57b1-6da0-4bf9-ab50-70656acf4d72",
+            "text": "Break a leg",
+            "difficulty": "easy"
+          },
+          {
+            "id": "8bd71c1a-2c74-461f-9e55-77ed956ad3c7",
+            "text": "It's raining cats and dogs",
+            "difficulty": "easy"
+          },
+          {
+            "id": "b5b5593c-77b8-42bb-b75b-62b628997061",
+            "text": "Don't cry over spilled milk",
+            "difficulty": "easy"
+          },
+          {
+            "id": "a11e3cf3-aec4-461f-a92a-4d3195a9c38a",
+            "text": "The early bird catches the worm",
+            "difficulty": "easy"
+          },
+          {
+            "id": "1054825c-1b28-42d6-8db8-7409f7c37c92",
+            "text": "When pigs fly",
+            "difficulty": "easy"
+          },
+          {
+            "id": "6c172935-ac68-4751-81f4-810d8e52386c",
+            "text": "Piece of cake",
+            "difficulty": "easy"
+          },
+          {
+            "id": "412150aa-4d53-49e8-b4b9-a2756018ac71",
+            "text": "Hit the nail on the head",
+            "difficulty": "easy"
+          },
+          {
+            "id": "cfc1dbcc-9bf8-42c5-8b9f-68695758fa2d",
+            "text": "Let the cat out of the bag",
+            "difficulty": "easy"
+          },
+          {
+            "id": "6265d7c3-cb8e-4232-a069-6e8ed8b9419d",
+            "text": "Break the ice",
+            "difficulty": "easy"
+          },
+          {
+            "id": "5df922a3-0b29-49f2-807b-a89a16359947",
+            "text": "Time flies",
+            "difficulty": "easy"
+          },
+          {
+            "id": "91fc1ca1-6273-4ccd-bff7-c4b481db228d",
+            "text": "Burn the midnight oil",
+            "difficulty": "medium"
+          },
+          {
+            "id": "fd57a49d-fd79-4602-abbf-8b4adb639c21",
+            "text": "Don't put all your eggs in one basket",
+            "difficulty": "medium"
+          },
+          {
+            "id": "db98776a-57f7-45d2-a326-6e8fdc492039",
+            "text": "The ball is in your court",
+            "difficulty": "medium"
+          },
+          {
+            "id": "0af7790c-00af-44eb-9058-61f899e5bff8",
+            "text": "Kill two birds with one stone",
+            "difficulty": "medium"
+          },
+          {
+            "id": "15b9b216-96ca-4b05-be29-3bed39e36d17",
+            "text": "A blessing in disguise",
+            "difficulty": "medium"
+          },
+          {
+            "id": "ba8bb913-ec32-479a-8623-97014e4a32e5",
+            "text": "Better late than never",
+            "difficulty": "medium"
+          },
+          {
+            "id": "36f1d0ef-4ac9-4dda-bd48-e71f1aaefe0f",
+            "text": "The devil is in the details",
+            "difficulty": "medium"
+          },
+          {
+            "id": "1f3b10f5-b391-47a1-a533-1012a1923643",
+            "text": "Actions speak louder than words",
+            "difficulty": "medium"
+          },
+          {
+            "id": "3a63b0f4-01d4-4c18-af03-a5bb1b371210",
+            "text": "You can't judge a book by its cover",
+            "difficulty": "medium"
+          },
+          {
+            "id": "60a34893-5e62-460d-bcaa-d58167f03691",
+            "text": "Cross that bridge when you come to it",
+            "difficulty": "medium"
+          },
+          {
+            "id": "f6cc89c0-8b42-4355-a107-4ee448eeadfd",
+            "text": "A bird in the hand is worth two in the bush",
+            "difficulty": "spicy"
+          },
+          {
+            "id": "cde77595-4368-4e89-ad2b-183a19dbcd20",
+            "text": "Don't count your chickens before they hatch",
+            "difficulty": "spicy"
+          },
+          {
+            "id": "9b3506e2-0b29-4632-b195-b4ad39562f3f",
+            "text": "The squeaky wheel gets the grease",
+            "difficulty": "spicy"
+          },
+          {
+            "id": "45ec20df-2231-493d-ad1d-e9f7bfd3015d",
+            "text": "You can lead a horse to water but you can't make it drink",
+            "difficulty": "spicy"
+          },
+          {
+            "id": "10b4c22e-5c60-43e4-b5d3-688c6b3f73bb",
+            "text": "Rome wasn't built in a day",
+            "difficulty": "spicy"
+          }
+        ]
+      },
+      {
+        "Category": "18+",
+        "Phrases": [
+          {
+            "id": "79170bf9-7f26-49f9-981b-d0fcbb7894c2",
+            "text": "69",
+            "difficulty": "easy"
+          },
+          {
+            "id": "cf3e8c19-47bd-44a9-b892-447fd3516d31",
+            "text": "Reverse cow girl",
+            "difficulty": "easy"
+          },
+          {
+            "id": "f8225d90-73b3-4df6-864a-04344fe1ab33",
+            "text": "Blowjob",
+            "difficulty": "easy"
+          },
+          {
+            "id": "63eaeb28-612b-4dee-9882-df2ae95bdc22",
+            "text": "Doggy Style",
+            "difficulty": "easy"
+          },
+          {
+            "id": "6835b933-154c-4ea9-9a71-339d2f6421d7",
+            "text": "Missionary",
+            "difficulty": "easy"
+          },
+          {
+            "id": "5bca827c-9c3c-4ec5-86a0-99e61cfce5e2",
+            "text": "Dry Humping",
+            "difficulty": "easy"
+          },
+          {
+            "id": "113a9219-e00f-4623-becc-a967a129eb61",
+            "text": "Lap Dance",
+            "difficulty": "easy"
+          },
+          {
+            "id": "65d992f6-fee7-489a-9b94-be354e09a5d7",
+            "text": "Fingerplay",
+            "difficulty": "easy"
+          },
+          {
+            "id": "f9e519fa-7137-4023-aefd-dccb8fa98d51",
+            "text": "Full body massage",
+            "difficulty": "easy"
+          },
+          {
+            "id": "3a7915c9-f86e-4ac2-85e8-0257936647d0",
+            "text": "Accidentally sexting the wrong person",
+            "difficulty": "easy"
+          },
+          {
+            "id": "ebec47be-0348-4fbf-8513-6c7d0182a4c0",
+            "text": "Forgot the safeword",
+            "difficulty": "easy"
+          },
+          {
+            "id": "9a8bd578-9596-4e91-8e44-89cd3543174e",
+            "text": "Steamy elevator moment",
+            "difficulty": "easy"
+          },
+          {
+            "id": "5ded21fc-c706-4426-9a6e-fa3f9cfc933d",
+            "text": "Getting handcuffed (playfully)",
+            "difficulty": "easy"
+          },
+          {
+            "id": "61defda8-2d61-4aa3-8246-1bb1d9a59718",
+            "text": "Walking out with a hickey",
+            "difficulty": "easy"
+          },
+          {
+            "id": "72de6b9c-faf5-49d0-8986-ba3592e03b97",
+            "text": "Being caught with lingerie in your bag",
+            "difficulty": "easy"
+          },
+          {
+            "id": "360a89ca-2218-41b5-99d1-c7c975e50b30",
+            "text": "Neighbors complaining of loud moanings.",
+            "difficulty": "easy"
+          },
+          {
+            "id": "1a91fe7d-f226-4377-bb11-30737ba810a4",
+            "text": "Getting lipstick on someone’s collar",
+            "difficulty": "easy"
+          },
+          {
+            "id": "0eabf18e-5510-4621-ab64-2ae82bda2f09",
+            "text": "Playing “truth or dare” and regretting it",
+            "difficulty": "easy"
+          },
+          {
+            "id": "3ac7c8cc-04af-4e86-bc77-39956b19eccc",
+            "text": "Sexy vampire",
+            "difficulty": "easy"
+          },
+          {
+            "id": "d65fd857-8cf0-4999-a07a-d0a0a3a9f428",
+            "text": "Naughty nurse",
+            "difficulty": "easy"
+          },
+          {
+            "id": "12d631b9-a15b-4f7a-8e97-511424169ac9",
+            "text": "French maid",
+            "difficulty": "easy"
+          },
+          {
+            "id": "473bd6a6-d2a2-4333-9d38-384d9d6e8f0f",
+            "text": "Firefighter fantasy",
+            "difficulty": "easy"
+          },
+          {
+            "id": "3d3ab8f4-5f36-4010-878e-b650de0ce514",
+            "text": "Sexy Police officer",
+            "difficulty": "easy"
+          },
+          {
+            "id": "14498eaa-728b-488f-a4a8-883f3f538688",
+            "text": "Teacher & student roleplay",
+            "difficulty": "easy"
+          },
+          {
+            "id": "ad3f5d68-aa91-4172-9f05-84b541c65889",
+            "text": "Office boss roleplay",
+            "difficulty": "easy"
+          },
+          {
+            "id": "c38866dd-59f2-4cfc-99ad-8988f98f254b",
+            "text": "Librarian fantasy",
+            "difficulty": "easy"
+          },
+          {
+            "id": "2965ec18-5f76-439b-84c6-ea6e2d94764f",
+            "text": "Flirty bartender costume",
+            "difficulty": "easy"
+          }
+        ]
+      },
+      {
+        "Category": "Embarrassing Moments",
+        "Phrases": [
+          {
+            "id": "213e05df-d835-4249-a4fa-d95bec0b15f4",
+            "text": "Calling someone by the wrong name",
+            "difficulty": "easy"
+          },
+          {
+            "id": "32f5edbf-7970-4396-b054-1f4fca2209f0",
+            "text": "Waving back at someone who wasn’t waving at you",
+            "difficulty": "easy"
+          },
+          {
+            "id": "b8c36380-8f6b-495a-a6b1-5dc25253fc2d",
+            "text": "Sending a message to the wrong chat",
+            "difficulty": "easy"
+          },
+          {
+            "id": "1d504e5d-4788-431b-97d8-98525d240909",
+            "text": "Tripping in public",
+            "difficulty": "easy"
+          },
+          {
+            "id": "c7a92d4d-55d4-439d-9f4b-0631be282bb7",
+            "text": "Falling asleep during a meeting",
+            "difficulty": "easy"
+          },
+          {
+            "id": "548c2070-20f6-4096-b50f-e6e592841084",
+            "text": "Forgetting someone’s name mid-conversation",
+            "difficulty": "easy"
+          },
+          {
+            "id": "dd5f7f09-9c88-429c-87e9-6e0b20cdc074",
+            "text": "Walking into a glass door",
+            "difficulty": "easy"
+          },
+          {
+            "id": "65c6de59-b208-4dff-a6de-6d08723592c3",
+            "text": "Laughing at the wrong moment",
+            "difficulty": "easy"
+          },
+          {
+            "id": "245d6801-004e-4ef7-9f53-46df2a76e2cb",
+            "text": "Mishearing and answering the wrong question",
+            "difficulty": "easy"
+          },
+          {
+            "id": "e04400cd-99a8-4442-adac-d4901c5876b9",
+            "text": "Having food stuck in your teeth",
+            "difficulty": "easy"
+          },
+          {
+            "id": "4c882057-591c-492e-a132-4f31e5ecfd49",
+            "text": "Accidentally liking someone's old photo",
+            "difficulty": "easy"
+          },
+          {
+            "id": "9e07a671-61f9-4ba9-a6cc-b7b2ac101e39",
+            "text": "Wearing your shirt inside-out all day",
+            "difficulty": "easy"
+          },
+          {
+            "id": "07f1afba-2486-4ff7-b0af-0a65c032349e",
+            "text": "Responding to a joke that wasn’t a joke",
+            "difficulty": "easy"
+          },
+          {
+            "id": "23f39094-e323-4015-94e2-dc9ef5cdeb68",
+            "text": "Saying “you too” when it makes no sense",
+            "difficulty": "easy"
+          },
+          {
+            "id": "80c747c3-87c2-4bb0-9011-3b8a4d85dd85",
+            "text": "Waving at someone who didn’t see you",
+            "difficulty": "easy"
+          },
+          {
+            "id": "a7b2c2f3-f92b-4a6c-8396-1d5142dc4a2e",
+            "text": "Losing your balance taking a selfie",
+            "difficulty": "easy"
+          },
+          {
+            "id": "3dee5103-b736-446c-acee-10472ce3dc72",
+            "text": "Talking to someone who wasn’t talking to you",
+            "difficulty": "easy"
+          },
+          {
+            "id": "c82f7a8c-70d0-41c8-8a50-4268c11aa2e4",
+            "text": "Pocket-dialing someone",
+            "difficulty": "easy"
+          },
+          {
+            "id": "6f3c4cbc-0f5e-4c3d-a666-fe097f6b690a",
+            "text": "Realizing your zipper has been down",
+            "difficulty": "easy"
+          },
+          {
+            "id": "901ced63-d371-43b7-bb89-2281790d4c19",
+            "text": "Walking into the wrong bathroom",
+            "difficulty": "easy"
+          }
+        ]
+      },
+      {
+        "Category": "Video Game Moments",
+        "Phrases": [
+          {
+            "id": "26086d12-553d-4b49-b1ad-53d780a0036e",
+            "text": "Jumping too early and missing the platform",
+            "difficulty": "easy"
+          },
+          {
+            "id": "de24cfb9-912f-4476-b5ba-49493cb51889",
+            "text": "Falling off a cliff because you looked at the minimap",
+            "difficulty": "easy"
+          },
+          {
+            "id": "3de39e0d-5f72-4a7e-a804-8a5aad5d51cc",
+            "text": "Forgetting to save before a boss fight",
+            "difficulty": "easy"
+          },
+          {
+            "id": "1cf492f2-06d5-4845-8006-50d927617559",
+            "text": "Rage-quitting and then returning 2 minutes later",
+            "difficulty": "easy"
+          },
+          {
+            "id": "bfb77dcc-27ee-42ec-b786-80c7869500dd",
+            "text": "Equipping “heavy armor” and it’s a bikini",
+            "difficulty": "easy"
+          },
+          {
+            "id": "ca3298f1-a82a-488b-acde-c6a49e7fc9a1",
+            "text": "NPC blocking the doorway",
+            "difficulty": "easy"
+          },
+          {
+            "id": "e2edbd56-2612-4554-a1ba-fb904260e258",
+            "text": "Walking into a cutscene with the dumbest outfit equipped",
+            "difficulty": "easy"
+          },
+          {
+            "id": "ec857310-67b4-46f3-bd45-e1dcfd4e9b80",
+            "text": "Trying to sneak but you’re wearing loud armor",
+            "difficulty": "easy"
+          },
+          {
+            "id": "8e494665-f47a-4d03-b54d-914d15407b36",
+            "text": "Throwing a grenade and it bounces back at you",
+            "difficulty": "easy"
+          },
+          {
+            "id": "47ae2962-b2e2-4fc7-8bed-0089ae3feee7",
+            "text": "Dying in the tutorial",
+            "difficulty": "easy"
+          },
+          {
+            "id": "3a88b750-a4fa-4517-b136-7b79a299578c",
+            "text": "Accidentally attacking an important NPC",
+            "difficulty": "easy"
+          },
+          {
+            "id": "72b70b92-f009-4f8a-81f1-abad7b846193",
+            "text": "Getting stuck in character creator for 45 minutes",
+            "difficulty": "easy"
+          },
+          {
+            "id": "cd12f491-f661-4152-b02f-1f75ea58304b",
+            "text": "Jumping instead of talking to someone",
+            "difficulty": "easy"
+          },
+          {
+            "id": "afe4acfe-5d9c-47c1-b521-12e57719d242",
+            "text": "Crafting the wrong item and wasting all your materials",
+            "difficulty": "easy"
+          },
+          {
+            "id": "867c5c9d-e4c6-4ab0-acec-a9a703323088",
+            "text": "Running out of stamina one step before safety",
+            "difficulty": "easy"
+          },
+          {
+            "id": "677d8f4c-963e-41f9-a2bb-5dddf706a2c8",
+            "text": "Getting one-shot by someone with bad sense of style",
+            "difficulty": "easy"
+          },
+          {
+            "id": "8f2d0205-37eb-4b38-9a89-ea4172455615",
+            "text": "Defying the laws of gravity by horseriding",
+            "difficulty": "easy"
+          },
+          {
+            "id": "606c5d92-e33a-4c03-a20a-d8a605e5d7b4",
+            "text": "Aggroing the entire map by accident",
+            "difficulty": "easy"
+          },
+          {
+            "id": "e15b37aa-8607-4319-876f-bd53b1c55cd2",
+            "text": "Trying to climb a wall that clearly isn’t climbable",
+            "difficulty": "easy"
+          },
+          {
+            "id": "9b53d556-b7a1-4fe7-b313-0f00bdcc780c",
+            "text": "Talking to the same NPC three times by mistake",
+            "difficulty": "easy"
+          },
+          {
+            "id": "2fcf6007-33a8-42e8-9665-fc3a91a9a6b1",
+            "text": "Opening your inventory mid-combat",
+            "difficulty": "easy"
+          },
+          {
+            "id": "be147ba5-34de-416e-9eb4-44c9757bc1ad",
+            "text": "Throwing your only healing item",
+            "difficulty": "easy"
+          },
+          {
+            "id": "3894b4cb-dccd-4ab3-8da9-27fad24ea04c",
+            "text": "Stealth failing because you sneezed IRL",
+            "difficulty": "easy"
+          },
+          {
+            "id": "4cb4006d-47a6-45d3-98cd-da6bdca1bde6",
+            "text": "Wearing mismatched armor that looks ridiculous",
+            "difficulty": "easy"
+          },
+          {
+            "id": "93e2b2f9-ceb3-44c9-98b2-f78976fb190d",
+            "text": "Forgetting which button is “jump” and dying",
+            "difficulty": "easy"
+          },
+          {
+            "id": "ef7d31c3-3213-47b3-9af0-041b57e3e6fa",
+            "text": "Wasting your ultimate on a single small enemy",
+            "difficulty": "easy"
+          },
+          {
+            "id": "8eb18232-0e0e-4b26-a2e9-e5a062af120c",
+            "text": "Getting killed during a loading lag spike",
+            "difficulty": "easy"
+          },
+          {
+            "id": "7bce0a81-fca2-4dbf-9782-de4dfb97461f",
+            "text": "Accidentally skipping an important dialogue",
+            "difficulty": "easy"
+          },
+          {
+            "id": "38616633-09b8-44a6-841f-6df7b20c5105",
+            "text": "Walking into an enemy camp while staring at your phone",
+            "difficulty": "easy"
+          },
+          {
+            "id": "56e1e1a7-f0e9-488f-955a-a2f3a91be520",
+            "text": "Trying to swim in a game where you can’t swim",
+            "difficulty": "easy"
+          },
+          {
+            "id": "167f79ec-56f8-419b-a9a0-358ac183bf78",
+            "text": "Losing because your controller batteries died",
+            "difficulty": "easy"
+          },
+          {
+            "id": "3929c959-25b2-47c4-a2de-8de68c012734",
+            "text": "Panicking and rolling off a cliff",
+            "difficulty": "easy"
+          },
+          {
+            "id": "e020cab8-04a7-48ea-8dc2-2d1d24a0d5a2",
+            "text": "Realizing your armor broke mid-battle",
+            "difficulty": "easy"
+          },
+          {
+            "id": "f4bcba9a-1d64-4f8b-8efe-7cffb95cb497",
+            "text": "Accidentally selling your best weapon",
+            "difficulty": "easy"
+          },
+          {
+            "id": "5fc2c537-3b5c-406c-9595-cdc1ad4036dc",
+            "text": "Getting hit by friendly fire",
+            "difficulty": "easy"
+          },
+          {
+            "id": "0cd6dcff-4215-474d-983a-54bc9cc4f307",
+            "text": "Forgetting to reload before a mob rush",
+            "difficulty": "easy"
+          },
+          {
+            "id": "ef766186-69d6-4e03-80e2-635a5aa3a3d2",
+            "text": "Being chased by enemies way above your level",
+            "difficulty": "easy"
+          },
+          {
+            "id": "fd986ab8-519f-49dd-abe3-9a4f4b19010b",
+            "text": "Getting stuck in a dialogue loop",
+            "difficulty": "easy"
+          },
+          {
+            "id": "4561be10-17a8-4708-9cf5-1f896b785ba3",
+            "text": "Opening your glider too late",
+            "difficulty": "easy"
+          },
+          {
+            "id": "9a444039-c5b3-4d5b-a522-0fcd4b62f94f",
+            "text": "Getting combo-locked by tiny enemies",
+            "difficulty": "easy"
+          },
+          {
+            "id": "e67318d5-d989-4d57-85a7-aa938a296151",
+            "text": "Falling for an obvious fake treasure chest",
+            "difficulty": "easy"
+          },
+          {
+            "id": "bb86aeb8-973d-40b3-8d2b-9380d7993443",
+            "text": "Talking trash in voice chat and instantly dying",
+            "difficulty": "easy"
+          },
+          {
+            "id": "9f19fd04-f19a-4bab-acd7-f705bfb6bd04",
+            "text": "Getting one-shot by a random barrel explosion",
+            "difficulty": "easy"
+          },
+          {
+            "id": "a9e222ab-7d40-43e1-b0c2-e10817929464",
+            "text": "Being defeated by fall damage, again",
+            "difficulty": "easy"
+          },
+          {
+            "id": "3032ada8-f970-465d-b799-68d995f642c1",
+            "text": "Respawning into danger immediately",
+            "difficulty": "easy"
+          },
+          {
+            "id": "38b6f992-c279-494f-bb16-8465c46091cf",
+            "text": "Your companion AI walking into traps",
+            "difficulty": "easy"
+          },
+          {
+            "id": "8a423a54-a847-4304-a2d6-72c5ca51121b",
+            "text": "Jumping when you meant to crouch",
+            "difficulty": "easy"
+          },
+          {
+            "id": "9e6d64e3-2ffe-4723-8779-3401595d7f01",
+            "text": "Accidentally throwing away a rare item",
+            "difficulty": "easy"
+          },
+          {
+            "id": "2afc4266-c831-499b-9d83-9f6a4fca369d",
+            "text": "Missing a jump because the camera turned itself",
+            "difficulty": "easy"
+          },
+          {
+            "id": "a080e7e4-26d3-4562-ad74-d122c24a03ea",
+            "text": "Running out of arrows at the worst possible moment",
+            "difficulty": "easy"
+          },
+          {
+            "id": "c83d8862-8c35-4eee-9d8e-4f022db8bc14",
+            "text": "Getting chased by chickens",
+            "difficulty": "easy"
+          },
+          {
+            "id": "c7045bf1-6a03-460f-89ce-098db20ecebe",
+            "text": "Getting lost even though there’s a giant waypoint",
+            "difficulty": "easy"
+          },
+          {
+            "id": "86a6880a-d22b-4d0d-9194-905c7d15fe02",
+            "text": "Fighting the boss with the wrong weapon equipped",
+            "difficulty": "easy"
+          }
+        ]
+      }
+    ]
+  }
+]
