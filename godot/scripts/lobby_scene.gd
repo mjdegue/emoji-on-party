@@ -5,6 +5,7 @@ extends Control
 @onready var start_button: Button = $VBox/StartButton
 @onready var status_label: Label = $VBox/StatusLabel
 @onready var title_label: Label = $VBox/Title
+@onready var background: ColorRect = $Background
 
 var game: Node
 var network: Node
@@ -24,7 +25,34 @@ func _ready() -> void:
 	game.player_removed.connect(_on_player_removed)
 	start_button.pressed.connect(_on_start_pressed)
 
+	_apply_theme()
 	_update_ui()
+	Theme.fade_in(self)
+
+
+func _apply_theme() -> void:
+	background.color = Theme.BG_COLOR
+	Theme.style_label(title_label, Theme.FONT_TITLE, Theme.PRIMARY)
+	Theme.style_label(code_label, Theme.FONT_CODE, Theme.GOLD)
+	Theme.style_label(status_label, Theme.FONT_BODY, Theme.TEXT_MUTED)
+
+	var btn_style := StyleBoxFlat.new()
+	btn_style.bg_color = Theme.PRIMARY
+	btn_style.corner_radius_top_left = 12
+	btn_style.corner_radius_top_right = 12
+	btn_style.corner_radius_bottom_left = 12
+	btn_style.corner_radius_bottom_right = 12
+	btn_style.content_margin_top = 16
+	btn_style.content_margin_bottom = 16
+	start_button.add_theme_stylebox_override("normal", btn_style)
+	var btn_hover := btn_style.duplicate()
+	btn_hover.bg_color = Theme.PRIMARY_DARK
+	start_button.add_theme_stylebox_override("hover", btn_hover)
+	var btn_disabled := btn_style.duplicate()
+	btn_disabled.bg_color = Theme.SURFACE_LIGHT
+	start_button.add_theme_stylebox_override("disabled", btn_disabled)
+	start_button.add_theme_font_size_override("font_size", Theme.FONT_SUBHEADING)
+	start_button.add_theme_color_override("font_color", Theme.TEXT_COLOR)
 
 
 func _find_main() -> Node:
@@ -37,7 +65,7 @@ func _find_main() -> Node:
 
 
 func _on_session_created(code: String) -> void:
-	code_label.text = "Join at: %s" % code
+	code_label.text = code
 	_update_ui()
 
 
@@ -62,21 +90,35 @@ func _update_ui() -> void:
 
 	var player_count: int = game.get_player_count()
 
+	var idx := 0
 	for pid in game.players:
 		var p: Dictionary = game.players[pid]
-		var label := Label.new()
-		var status := ""
-		if not p["is_connected"]:
-			status = " (disconnected)"
-		var creator := ""
+
+		var panel := Theme.make_panel(player_list, Theme.SURFACE_COLOR)
+		var hbox := HBoxContainer.new()
+		hbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		panel.add_child(hbox)
+
+		var name_label := Label.new()
+		name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		var display_name: String = p["name"]
 		if p["is_creator"]:
-			creator = " [HOST]"
-		label.text = "%s%s%s" % [p["name"], creator, status]
-		label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		player_list.add_child(label)
+			display_name += "  [HOST]"
+		Theme.style_label(name_label, Theme.FONT_BODY, Theme.TEXT_COLOR)
+		name_label.text = display_name
+		hbox.add_child(name_label)
+
+		if not p["is_connected"]:
+			var offline_label := Label.new()
+			Theme.style_label(offline_label, Theme.FONT_SMALL, Theme.ERROR)
+			offline_label.text = "OFFLINE"
+			hbox.add_child(offline_label)
+
+		Theme.slide_in_from_bottom(panel, 0.3, idx * 0.05)
+		idx += 1
 
 	start_button.disabled = player_count < game.MIN_PLAYERS
 	if player_count < game.MIN_PLAYERS:
 		status_label.text = "Waiting for players... (%d/%d)" % [player_count, game.MAX_PLAYERS]
 	else:
-		status_label.text = "Ready to start!"
+		status_label.text = "Ready! Press SPACE to start"

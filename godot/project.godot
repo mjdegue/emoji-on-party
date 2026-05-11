@@ -12,6 +12,10 @@ config_version=5
 
 compatibility/default_parent_skeleton_in_mesh_instance_3d=true
 
+[autoload]
+
+Theme="*res://scripts/theme_config.gd"
+
 [application]
 
 config/name="Emoji-On Party"
