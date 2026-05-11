@@ -44,6 +44,8 @@ function handleMessage(ws, msg) {
       return handleHostCreate(ws, msg);
     case 'player_join':
       return handlePlayerJoin(ws, msg);
+    case 'player_rejoin':
+      return handlePlayerRejoin(ws, msg);
     default:
       return handleGameMessage(ws, msg);
   }
@@ -98,6 +100,57 @@ function handlePlayerJoin(ws, msg) {
     type: 'player_join',
     payload: { playerId, name },
     from: playerId,
+  });
+}
+
+function handlePlayerRejoin(ws, msg) {
+  if (ws.role) {
+    sendTo(ws, { type: 'error', payload: { message: 'Connection already has a role' } });
+    return;
+  }
+
+  const { code, name, playerId: oldPlayerId } = msg.payload ?? {};
+  if (!code || !name) {
+    sendTo(ws, { type: 'error', payload: { message: 'Missing code or name' } });
+    return;
+  }
+
+  const session = registry.getSession(code.toUpperCase());
+  if (!session) {
+    sendTo(ws, { type: 'error', payload: { message: 'Session not found' } });
+    return;
+  }
+
+  // If the client knows their old playerId, swap the WebSocket directly
+  if (oldPlayerId && session.clients.has(oldPlayerId)) {
+    session.clients.set(oldPlayerId, ws);
+    ws.role = 'client';
+    ws.sessionCode = session.code;
+    ws.playerId = oldPlayerId;
+
+    console.log(`Player "${name}" (${oldPlayerId}) reconnected to session ${session.code}`);
+
+    sendTo(session.host, {
+      type: 'player_rejoin',
+      payload: { playerId: oldPlayerId, name },
+      from: oldPlayerId,
+    });
+    return;
+  }
+
+  // Otherwise forward to host to match by name
+  const tempId = crypto.randomUUID();
+  registry.addClient(session.code, tempId, ws);
+  ws.role = 'client';
+  ws.sessionCode = session.code;
+  ws.playerId = tempId;
+
+  console.log(`Player "${name}" (${tempId}) attempting rejoin to session ${session.code}`);
+
+  sendTo(session.host, {
+    type: 'player_rejoin',
+    payload: { playerId: tempId, name },
+    from: tempId,
   });
 }
 

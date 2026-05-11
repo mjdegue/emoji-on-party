@@ -1,6 +1,6 @@
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { useWebSocket } from "./hooks/useWebSocket";
-import { useGameStore } from "./store/gameStore";
+import { useGameStore, type GamePhase } from "./store/gameStore";
 import { JoinScreen } from "./screens/JoinScreen";
 import { LobbyScreen } from "./screens/LobbyScreen";
 import { DescribingScreen } from "./screens/DescribingScreen";
@@ -22,17 +22,67 @@ import type {
   PlayerDisconnectedPayload,
 } from "./types/messages";
 
+interface StateSyncPayload {
+  phase: string;
+  currentSubPhase: string;
+  players: { id: string; name: string; isCreator: boolean; isConnected: boolean }[];
+  sessionCode: string;
+  myPhrase?: { id: string; text: string; category: string; difficulty: string };
+  myEmojiSubmitted?: boolean;
+  currentEmojiIndex?: number;
+  totalEmojis?: number;
+  targetPlayerId?: string;
+  targetPlayerName?: string;
+  targetEmoji?: string;
+}
+
+function saveSession(playerId: string, name: string, code: string) {
+  sessionStorage.setItem("emoji-on-session", JSON.stringify({ playerId, name, code }));
+}
+
+function loadSession(): { playerId: string; name: string; code: string } | null {
+  try {
+    const raw = sessionStorage.getItem("emoji-on-session");
+    if (!raw) return null;
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
+}
+
+function clearSession() {
+  sessionStorage.removeItem("emoji-on-session");
+}
+
+const PHASE_MAP: Record<string, GamePhase> = {
+  lobby: "lobby",
+  dealing: "dealing",
+  describing: "describing",
+};
+
 export default function App() {
   const store = useGameStore();
+  const sendRef = useRef<(type: string, payload?: Record<string, unknown>) => void>(() => {});
 
   const handleMessage = useCallback(
     (type: string, payload: Record<string, unknown>, _from: string) => {
       const s = useGameStore.getState();
 
       switch (type) {
-        case "__connected":
+        case "__connected": {
           s.setConnected(true);
+          // Attempt rejoin if we have a saved session
+          const saved = loadSession();
+          if (saved && saved.playerId && saved.code) {
+            s.setPlayerInfo(saved.playerId, saved.name, saved.code);
+            sendRef.current("player_rejoin", {
+              code: saved.code,
+              name: saved.name,
+              playerId: saved.playerId,
+            });
+          }
           break;
+        }
         case "__disconnected":
           s.setConnected(false);
           break;
@@ -41,6 +91,42 @@ export default function App() {
           s.setPlayerInfo(p.playerId, s.playerName, p.sessionState.sessionCode);
           s.setPlayers(p.sessionState.players);
           s.setPhase("lobby");
+          saveSession(p.playerId, s.playerName, p.sessionState.sessionCode);
+          break;
+        }
+        case "state_sync": {
+          const p = payload as unknown as StateSyncPayload;
+          s.setPlayers(p.players);
+
+          if (p.myPhrase) {
+            s.setMyPhrase(p.myPhrase);
+            if (p.myEmojiSubmitted) s.setEmojiSubmitted();
+          }
+
+          if (p.targetPlayerId && p.targetEmoji) {
+            s.setDecoyRound({
+              targetPlayerId: p.targetPlayerId,
+              targetPlayerName: p.targetPlayerName || "",
+              emojiSelection: p.targetEmoji,
+              category: "",
+              currentEmojiIndex: p.currentEmojiIndex || 0,
+              totalEmojis: p.totalEmojis || 0,
+            });
+          }
+
+          // Map server phase to client phase
+          const subPhase = p.currentSubPhase;
+          if (subPhase === "collecting_decoys") {
+            s.setPhase("collecting_decoys");
+          } else if (subPhase === "collecting_guesses") {
+            s.setPhase("collecting_guesses");
+          } else if (subPhase === "revealing" || subPhase === "final_scores") {
+            s.setPhase("watching_reveal");
+          } else if (PHASE_MAP[p.phase]) {
+            s.setPhase(PHASE_MAP[p.phase]);
+          } else {
+            s.setPhase("lobby");
+          }
           break;
         }
         case "player_joined": {
@@ -72,12 +158,6 @@ export default function App() {
           switch (p.newPhase) {
             case "describing":
               s.setPhase("describing");
-              break;
-            case "decoy_rounds":
-              break;
-            case "collecting_guesses":
-              break;
-            case "ended":
               break;
           }
           break;
@@ -115,11 +195,13 @@ export default function App() {
           const p = payload as unknown as GameEndedPayload;
           s.setFinalRankings(p.finalRankings);
           s.setPhase("ended");
+          clearSession();
           break;
         }
         case "host_disconnected":
           s.setError("Host disconnected");
           s.setPhase("disconnected");
+          clearSession();
           break;
         case "error": {
           const msg = (payload as { message?: string }).message || "Unknown error";
@@ -132,6 +214,7 @@ export default function App() {
   );
 
   const { connect, send } = useWebSocket(handleMessage);
+  sendRef.current = send;
 
   useEffect(() => {
     connect();
@@ -227,10 +310,10 @@ export default function App() {
       );
 
     case "watching_reveal":
-      return <WatchingScreen message="Look at the TV! Results are being revealed..." />;
+      return <WatchingScreen message="Look at the TV! The real answer is being revealed..." />;
 
     case "watching_scores":
-      return <WatchingScreen message="Look at the TV! Scores are updating..." />;
+      return <WatchingScreen message="Look at the TV! Final scores are up!" />;
 
     case "ended":
       return (

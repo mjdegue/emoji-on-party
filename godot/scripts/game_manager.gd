@@ -61,6 +61,7 @@ func initialize(net: Node, phrases: Node) -> void:
 	network = net
 	phrase_manager = phrases
 	network.player_joined.connect(_on_player_joined)
+	network.player_rejoined.connect(_handle_player_rejoin)
 	network.player_disconnected.connect(_on_player_disconnected)
 	network.message_received.connect(_on_message_received)
 	network.connected.connect(_on_network_connected)
@@ -117,6 +118,79 @@ func _on_player_disconnected(player_id: String) -> void:
 	players[player_id]["is_connected"] = false
 	player_removed.emit(player_id)
 	network.send_to_all("player_disconnected", {"playerId": player_id})
+
+
+# --- Reconnection ---
+
+func _handle_player_rejoin(new_player_id: String, player_name: String) -> void:
+	# Find existing player by name
+	var old_id := ""
+	for pid in players:
+		if players[pid]["name"] == player_name:
+			old_id = pid
+			break
+
+	if old_id == "":
+		# No match — treat as a new join if still in lobby
+		if phase == "lobby":
+			_on_player_joined(new_player_id, player_name)
+		else:
+			network.send_to_player(new_player_id, "error", {"message": "Player not found in this game"})
+		return
+
+	# Swap player ID if the relay assigned a new one
+	if new_player_id != old_id:
+		var player_data: Dictionary = players[old_id]
+		players.erase(old_id)
+		player_data["id"] = new_player_id
+		players[new_player_id] = player_data
+
+		if cumulative_scores.has(old_id):
+			cumulative_scores[new_player_id] = cumulative_scores[old_id]
+			cumulative_scores.erase(old_id)
+
+		if assignments.has(old_id):
+			assignments[new_player_id] = assignments[old_id]
+			assignments.erase(old_id)
+
+		# Update emoji processing order
+		var idx := emoji_processing_order.find(old_id)
+		if idx >= 0:
+			emoji_processing_order[idx] = new_player_id
+
+		if creator_id == old_id:
+			creator_id = new_player_id
+
+	players[new_player_id]["is_connected"] = true
+	print("Player \"%s\" reconnected as %s" % [player_name, new_player_id])
+
+	# Send them their current state
+	_send_state_sync(new_player_id)
+
+
+func _send_state_sync(player_id: String) -> void:
+	var state := {
+		"phase": phase,
+		"currentSubPhase": current_sub_phase,
+		"players": _get_lobby_state()["players"],
+		"sessionCode": network.get_session_code(),
+	}
+
+	if assignments.has(player_id):
+		state["myPhrase"] = assignments[player_id]["phrase"]
+		state["myEmojiSubmitted"] = assignments[player_id]["emoji_string"] != ""
+
+	if current_emoji_index >= 0 and current_emoji_index < emoji_processing_order.size():
+		var target_id: String = emoji_processing_order[current_emoji_index]
+		state["currentEmojiIndex"] = current_emoji_index
+		state["totalEmojis"] = emoji_processing_order.size()
+		if players.has(target_id):
+			state["targetPlayerId"] = target_id
+			state["targetPlayerName"] = players[target_id]["name"]
+		if assignments.has(target_id):
+			state["targetEmoji"] = assignments[target_id]["emoji_string"]
+
+	network.send_to_player(player_id, "state_sync", state)
 
 
 # --- Message Handling ---

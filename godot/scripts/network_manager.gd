@@ -4,6 +4,7 @@ signal connected
 signal disconnected
 signal session_created(code: String)
 signal player_joined(player_id: String, player_name: String)
+signal player_rejoined(player_id: String, player_name: String)
 signal player_disconnected(player_id: String)
 signal message_received(type: String, payload: Dictionary, from: String)
 
@@ -96,6 +97,11 @@ func _on_message(raw: String) -> void:
 			var player_name: String = payload.get("name", "")
 			print("Player joined: %s (%s)" % [player_name, player_id])
 			player_joined.emit(player_id, player_name)
+		"player_rejoin":
+			var rejoin_id: String = payload.get("playerId", "")
+			var rejoin_name: String = payload.get("name", "")
+			print("Player rejoin: %s (%s)" % [rejoin_name, rejoin_id])
+			player_rejoined.emit(rejoin_id, rejoin_name)
 		"player_disconnected":
 			var player_id: String = payload.get("playerId", "")
 			print("Player disconnected: %s" % player_id)
