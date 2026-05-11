@@ -154,7 +154,10 @@ func advance_phase() -> void:
 		"describing":
 			_start_decoy_rounds()
 		"decoy_rounds":
-			_advance_sub_phase()
+			if current_sub_phase == "final_scores":
+				_end_game()
+			else:
+				_advance_sub_phase()
 
 
 func _start_decoy_rounds() -> void:
@@ -169,6 +172,8 @@ func _advance_sub_phase() -> void:
 			_start_guessing()
 		"collecting_guesses":
 			_do_reveal()
+		"revealing":
+			_advance_after_reveal()
 
 
 func force_advance_sub_phase() -> void:
@@ -407,6 +412,8 @@ func _do_reveal() -> void:
 	var target_emoji: String = assignments[target_id]["emoji_string"]
 	var target_name: String = players[target_id]["name"]
 
+	current_sub_phase = "revealing"
+
 	network.send_to_all("round_reveal", {
 		"emojiSelection": target_emoji,
 		"user": target_id,
@@ -417,23 +424,55 @@ func _do_reveal() -> void:
 	})
 	reveal_ready.emit(target_emoji, target_name, reveal_phrases)
 
+	# Calculate scores silently — don't show until the end
 	var score_deltas := _calculate_emoji_scores(target_id, all_options)
 	_apply_score_deltas(score_deltas)
 	_archive_current_emoji_data(target_id)
 
+
+func _advance_after_reveal() -> void:
 	var is_last := current_emoji_index >= emoji_processing_order.size() - 1
-	var score_payload := _build_score_update(score_deltas, is_last)
-	network.send_to_all("score_update", score_payload)
-	scores_updated.emit(cumulative_scores.duplicate())
-	score_ready.emit(score_payload["playerScores"], is_last)
 
 	if is_last:
-		_end_game()
+		_show_final_scores()
 	else:
 		current_emoji_index += 1
 		current_emoji_decoys.clear()
 		current_emoji_guesses.clear()
 		_broadcast_decoy_round()
+
+
+func _show_final_scores() -> void:
+	current_sub_phase = "final_scores"
+	var score_payload := _build_score_update_all()
+	network.send_to_all("score_update", score_payload)
+	scores_updated.emit(cumulative_scores.duplicate())
+	score_ready.emit(score_payload["playerScores"], true)
+
+
+func _build_score_update_all() -> Dictionary:
+	var player_scores: Array = []
+	for pid in players:
+		var total_score: int = cumulative_scores.get(pid, 0)
+		player_scores.append({
+			"playerId": pid,
+			"playerName": players[pid]["name"],
+			"preRoundScore": 0,
+			"postRoundScore": total_score,
+			"pointsEarned": total_score,
+			"breakdown": {
+				"correctGuesses": 0,
+				"fooledPlayers": 0,
+				"clarityBonus": 0,
+			},
+		})
+	player_scores.sort_custom(func(a, b): return a["postRoundScore"] > b["postRoundScore"])
+	return {
+		"roundNumber": current_round,
+		"totalEmojis": emoji_processing_order.size(),
+		"isLastEmoji": true,
+		"playerScores": player_scores,
+	}
 
 
 func _build_reveal_data(_target_id: String, all_options: Array) -> Array:
