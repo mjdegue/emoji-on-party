@@ -27,17 +27,17 @@ func _ready() -> void:
 
 	_apply_theme()
 	_update_ui()
-	Theme.fade_in(self)
+	UI.fade_in(self)
 
 
 func _apply_theme() -> void:
-	background.color = Theme.BG_COLOR
-	Theme.style_label(title_label, Theme.FONT_TITLE, Theme.PRIMARY)
-	Theme.style_label(code_label, Theme.FONT_CODE, Theme.GOLD)
-	Theme.style_label(status_label, Theme.FONT_BODY, Theme.TEXT_MUTED)
+	background.color = UI.BG_COLOR
+	UI.style_label(title_label, UI.FONT_TITLE, UI.PRIMARY)
+	UI.style_label(code_label, UI.FONT_CODE, UI.GOLD)
+	UI.style_label(status_label, UI.FONT_BODY, UI.TEXT_MUTED)
 
 	var btn_style := StyleBoxFlat.new()
-	btn_style.bg_color = Theme.PRIMARY
+	btn_style.bg_color = UI.PRIMARY
 	btn_style.corner_radius_top_left = 12
 	btn_style.corner_radius_top_right = 12
 	btn_style.corner_radius_bottom_left = 12
@@ -46,13 +46,13 @@ func _apply_theme() -> void:
 	btn_style.content_margin_bottom = 16
 	start_button.add_theme_stylebox_override("normal", btn_style)
 	var btn_hover := btn_style.duplicate()
-	btn_hover.bg_color = Theme.PRIMARY_DARK
+	btn_hover.bg_color = UI.PRIMARY_DARK
 	start_button.add_theme_stylebox_override("hover", btn_hover)
 	var btn_disabled := btn_style.duplicate()
-	btn_disabled.bg_color = Theme.SURFACE_LIGHT
+	btn_disabled.bg_color = UI.SURFACE_LIGHT
 	start_button.add_theme_stylebox_override("disabled", btn_disabled)
-	start_button.add_theme_font_size_override("font_size", Theme.FONT_SUBHEADING)
-	start_button.add_theme_color_override("font_color", Theme.TEXT_COLOR)
+	start_button.add_theme_font_size_override("font_size", UI.FONT_SUBHEADING)
+	start_button.add_theme_color_override("font_color", UI.TEXT_COLOR)
 
 
 func _find_main() -> Node:
@@ -94,10 +94,10 @@ func _update_ui() -> void:
 	for pid in game.players:
 		var p: Dictionary = game.players[pid]
 
-		var color_idx: int = p.get("color_index", idx % Theme.PLAYER_COLORS.size())
-		var player_color: Color = Theme.PLAYER_COLORS[color_idx]
+		var color_idx: int = p.get("color_index", idx % UI.PLAYER_COLORS.size())
+		var player_color: Color = UI.PLAYER_COLORS[color_idx]
 
-		var panel := Theme.make_panel(player_list, Theme.SURFACE_COLOR)
+		var panel := UI.make_panel(player_list, UI.SURFACE_COLOR)
 		var hbox := HBoxContainer.new()
 		hbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		panel.add_child(hbox)
@@ -117,17 +117,17 @@ func _update_ui() -> void:
 		var display_name: String = p["name"]
 		if p["is_creator"]:
 			display_name += "  [HOST]"
-		Theme.style_label(name_label, Theme.FONT_BODY, player_color)
+		UI.style_label(name_label, UI.FONT_BODY, player_color)
 		name_label.text = display_name
 		hbox.add_child(name_label)
 
 		if not p["is_connected"]:
 			var offline_label := Label.new()
-			Theme.style_label(offline_label, Theme.FONT_SMALL, Theme.ERROR)
+			UI.style_label(offline_label, UI.FONT_SMALL, UI.ERROR)
 			offline_label.text = "OFFLINE"
 			hbox.add_child(offline_label)
 
-		Theme.slide_in_from_bottom(panel, 0.3, idx * 0.05)
+		UI.slide_in_from_bottom(panel, 0.3, idx * 0.05)
 		idx += 1
 
 	start_button.disabled = player_count < game.MIN_PLAYERS

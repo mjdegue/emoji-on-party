@@ -12,12 +12,12 @@ func setup(player_name: String, emoji: String, current_index: int, total: int) -
 	if not is_inside_tree():
 		return
 
-	background.color = Theme.BG_COLOR
-	Theme.style_label(progress_badge, Theme.FONT_SMALL, Theme.TEXT_MUTED)
-	Theme.style_label(player_name_label, Theme.FONT_SUBHEADING, Theme.TEXT_COLOR)
-	Theme.style_label(emoji_display, Theme.FONT_EMOJI, Theme.TEXT_COLOR)
-	Theme.style_label(phase_label, Theme.FONT_BODY, Theme.PRIMARY)
-	Theme.style_label(submission_progress, Theme.FONT_BODY, Theme.TEXT_MUTED)
+	background.color = UI.BG_COLOR
+	UI.style_label(progress_badge, UI.FONT_SMALL, UI.TEXT_MUTED)
+	UI.style_label(player_name_label, UI.FONT_SUBHEADING, UI.TEXT_COLOR)
+	UI.style_label(emoji_display, UI.FONT_EMOJI, UI.TEXT_COLOR)
+	UI.style_label(phase_label, UI.FONT_BODY, UI.PRIMARY)
+	UI.style_label(submission_progress, UI.FONT_BODY, UI.TEXT_MUTED)
 
 	progress_badge.text = "Emoji %d of %d" % [current_index + 1, total]
 	player_name_label.text = "%s's emoji:" % player_name
@@ -25,8 +25,8 @@ func setup(player_name: String, emoji: String, current_index: int, total: int) -
 	phase_label.text = "Write a fake answer!"
 	submission_progress.text = ""
 
-	Theme.fade_in(self, 0.3)
-	Theme.pulse(emoji_display)
+	UI.fade_in(self, 0.3)
+	UI.pulse(emoji_display)
 
 
 func set_sub_phase(sub_phase: String) -> void:

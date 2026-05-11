@@ -22,13 +22,13 @@ func update_progress(submitted: int, expected: int) -> void:
 
 
 func _ready() -> void:
-	background.color = Theme.BG_COLOR
-	Theme.style_label(title_label, Theme.FONT_HEADING, Theme.PRIMARY)
-	Theme.style_label(subtitle_label, Theme.FONT_BODY, Theme.TEXT_MUTED)
-	Theme.style_label(progress_label, Theme.FONT_SUBHEADING, Theme.TEXT_COLOR)
+	background.color = UI.BG_COLOR
+	UI.style_label(title_label, UI.FONT_HEADING, UI.PRIMARY)
+	UI.style_label(subtitle_label, UI.FONT_BODY, UI.TEXT_MUTED)
+	UI.style_label(progress_label, UI.FONT_SUBHEADING, UI.TEXT_COLOR)
 	_update_labels()
-	Theme.fade_in(self)
-	Theme.pulse(title_label)
+	UI.fade_in(self)
+	UI.pulse(title_label)
 
 
 func _update_labels() -> void:
