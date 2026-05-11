@@ -4,6 +4,10 @@ signal phase_changed(previous_phase: String, new_phase: String)
 signal player_added(player_id: String, player_name: String)
 signal player_removed(player_id: String)
 signal scores_updated(scores: Dictionary)
+signal decoy_round_started(target_name: String, emoji: String, index: int, total: int)
+signal reveal_ready(emoji: String, author_name: String, phrases: Array)
+signal score_ready(player_scores: Array, is_last: bool)
+signal submission_progress(submitted: int, expected: int)
 
 # --- Constants ---
 const MIN_PLAYERS := 1
@@ -215,6 +219,7 @@ func _handle_submit_emoji(player_id: String, payload: Dictionary) -> void:
 		"submittedCount": submitted,
 		"expectedCount": players.size(),
 	})
+	submission_progress.emit(submitted, players.size())
 
 	if submitted >= players.size():
 		_start_decoy_rounds()
@@ -257,6 +262,8 @@ func _broadcast_decoy_round() -> void:
 		"totalEmojis": emoji_processing_order.size(),
 	})
 
+	decoy_round_started.emit(target_name, assignment["emoji_string"], current_emoji_index, emoji_processing_order.size())
+
 
 # --- Decoy Submission ---
 
@@ -289,6 +296,7 @@ func _handle_submit_decoy(player_id: String, payload: Dictionary) -> void:
 		"submittedCount": submitted,
 		"expectedCount": expected,
 	})
+	submission_progress.emit(submitted, expected)
 
 	if submitted >= expected:
 		_start_guessing()
@@ -383,6 +391,7 @@ func _handle_submit_guess(player_id: String, payload: Dictionary) -> void:
 		"submittedCount": submitted,
 		"expectedCount": expected,
 	})
+	submission_progress.emit(submitted, expected)
 
 	if submitted >= expected:
 		_do_reveal()
@@ -395,14 +404,18 @@ func _do_reveal() -> void:
 	var all_options := _build_guessing_options(target_id)
 	var reveal_phrases := _build_reveal_data(target_id, all_options)
 
+	var target_emoji: String = assignments[target_id]["emoji_string"]
+	var target_name: String = players[target_id]["name"]
+
 	network.send_to_all("round_reveal", {
-		"emojiSelection": assignments[target_id]["emoji_string"],
+		"emojiSelection": target_emoji,
 		"user": target_id,
-		"userName": players[target_id]["name"],
+		"userName": target_name,
 		"phrases": reveal_phrases,
 		"currentEmojiIndex": current_emoji_index,
 		"totalEmojis": emoji_processing_order.size(),
 	})
+	reveal_ready.emit(target_emoji, target_name, reveal_phrases)
 
 	var score_deltas := _calculate_emoji_scores(target_id, all_options)
 	_apply_score_deltas(score_deltas)
@@ -412,6 +425,7 @@ func _do_reveal() -> void:
 	var score_payload := _build_score_update(score_deltas, is_last)
 	network.send_to_all("score_update", score_payload)
 	scores_updated.emit(cumulative_scores.duplicate())
+	score_ready.emit(score_payload["playerScores"], is_last)
 
 	if is_last:
 		_end_game()
