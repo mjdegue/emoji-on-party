@@ -4,6 +4,10 @@ extends Control
 @onready var emoji_display: Label = $VBox/EmojiDisplay
 @onready var author_label: Label = $VBox/AuthorLabel
 @onready var phrase_list: VBoxContainer = $VBox/PhraseList
+@onready var countdown_label: Label = $VBox/Countdown
+
+var _countdown := 15.0
+var _counting := false
 
 
 func setup(emoji: String, author_name: String, phrases: Array) -> void:
@@ -34,8 +38,29 @@ func setup(emoji: String, author_name: String, phrases: Array) -> void:
 
 		var votes := Label.new()
 		var count: int = p["selectionCount"]
-		votes.text = "%d vote%s" % [count, "" if count == 1 else "s"]
+		if count == 1:
+			votes.text = "1 vote"
+		else:
+			votes.text = "%d votes" % count
 		votes.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 		hbox.add_child(votes)
 
 		phrase_list.add_child(hbox)
+
+	_countdown = 15.0
+	_counting = true
+	_update_countdown()
+
+
+func _process(delta: float) -> void:
+	if not _counting:
+		return
+	_countdown -= delta
+	if _countdown < 0.0:
+		_countdown = 0.0
+		_counting = false
+	_update_countdown()
+
+
+func _update_countdown() -> void:
+	countdown_label.text = "Next in %d..." % ceili(_countdown)
