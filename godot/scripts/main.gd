@@ -31,3 +31,5 @@ func _host_advance() -> void:
 			game.start_game()
 		"describing", "decoy_rounds":
 			game.advance_phase()
+		"ended":
+			game.restart_game()

@@ -96,6 +96,7 @@ export interface GameActions {
   setDecoySubmitted: () => void;
   setGuessSubmitted: () => void;
   setError: (error: string) => void;
+  resetForNewGame: () => void;
   reset: () => void;
 }
 
@@ -200,6 +201,17 @@ export const useGameStore = create<GameState & GameActions>()((set) => ({
   setGuessSubmitted: () => set({ myGuessSubmitted: true }),
 
   setError: (error) => set({ error }),
+
+  resetForNewGame: () =>
+    set((s) => ({
+      ...initialState,
+      connected: s.connected,
+      playerId: s.playerId,
+      playerName: s.playerName,
+      sessionCode: s.sessionCode,
+      myColor: s.myColor,
+      phase: "lobby" as GamePhase,
+    })),
 
   reset: () => set(initialState),
 }));

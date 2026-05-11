@@ -196,7 +196,12 @@ export default function App() {
           const p = payload as unknown as GameEndedPayload;
           s.setFinalRankings(p.finalRankings);
           s.setPhase("ended");
-          clearSession();
+          break;
+        }
+        case "game_restarted": {
+          const state = (payload as { sessionState: StateSyncPayload }).sessionState;
+          s.resetForNewGame();
+          s.setPlayers(state.players);
           break;
         }
         case "host_disconnected":

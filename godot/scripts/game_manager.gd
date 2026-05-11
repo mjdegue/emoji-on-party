@@ -686,6 +686,29 @@ func _end_game() -> void:
 	})
 
 
+func restart_game() -> void:
+	assignments.clear()
+	decoys.clear()
+	guesses.clear()
+	current_emoji_decoys.clear()
+	current_emoji_guesses.clear()
+	emoji_processing_order.clear()
+	current_emoji_index = -1
+	current_sub_phase = ""
+	current_round = 1
+	started_at = 0
+	ended_at = 0
+	_reveal_timer.stop()
+
+	for pid in cumulative_scores:
+		cumulative_scores[pid] = 0
+
+	_set_phase("lobby")
+	network.send_to_all("game_restarted", {
+		"sessionState": _get_lobby_state(),
+	})
+
+
 func _build_final_rankings() -> Array:
 	var ranking: Array = []
 	for pid in players:
