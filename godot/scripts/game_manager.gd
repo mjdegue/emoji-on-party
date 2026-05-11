@@ -53,6 +53,9 @@ var current_emoji_guesses := {}
 var started_at := 0
 var ended_at := 0
 
+const REVEAL_DURATION := 15.0
+var _reveal_timer: Timer = null
+
 
 func initialize(net: Node, phrases: Node) -> void:
 	network = net
@@ -61,6 +64,11 @@ func initialize(net: Node, phrases: Node) -> void:
 	network.player_disconnected.connect(_on_player_disconnected)
 	network.message_received.connect(_on_message_received)
 	network.connected.connect(_on_network_connected)
+
+	_reveal_timer = Timer.new()
+	_reveal_timer.one_shot = true
+	_reveal_timer.timeout.connect(_on_reveal_timer_timeout)
+	add_child(_reveal_timer)
 
 
 func _on_network_connected() -> void:
@@ -423,6 +431,7 @@ func _do_reveal() -> void:
 		"totalEmojis": emoji_processing_order.size(),
 	})
 	reveal_ready.emit(target_emoji, target_name, reveal_phrases)
+	_reveal_timer.start(REVEAL_DURATION)
 
 	# Calculate scores silently — don't show until the end
 	var score_deltas := _calculate_emoji_scores(target_id, all_options)
@@ -430,7 +439,13 @@ func _do_reveal() -> void:
 	_archive_current_emoji_data(target_id)
 
 
+func _on_reveal_timer_timeout() -> void:
+	if current_sub_phase == "revealing":
+		_advance_after_reveal()
+
+
 func _advance_after_reveal() -> void:
+	_reveal_timer.stop()
 	var is_last := current_emoji_index >= emoji_processing_order.size() - 1
 
 	if is_last:
